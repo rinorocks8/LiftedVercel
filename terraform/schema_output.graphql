@@ -1,0 +1,92 @@
+type FriendRequest
+  @key(pk: "userID", sk: "requestingUserID")
+  @gsi(pk: "userID", sk: "requestedAt") {
+  userID: ID!
+  requestingUserID: ID!
+  requestedAt: String!
+}
+
+type Following
+  @key(pk: "userID", sk: "followingUserID")
+  @gsi(pk: "userID", sk: "acceptedAt")
+  @gsi(pk: "followingUserID", sk: "acceptedAt") {
+  userID: ID!
+  followingUserID: ID!
+  acceptedAt: String!
+}
+
+type Feed
+  @key(pk: "userID", sk: "workoutID")
+  @gsi(pk: "userID", sk: "createdAt") {
+  userID: ID!
+  workoutID: String!
+  workoutUserID: ID!
+  createdAt: String!
+}
+
+type Workout
+  @key(pk: "userID", sk: "workoutID")
+  @gsi(pk: "userID", sk: "createdAt") {
+  userID: ID!
+  workoutID: ID!
+  createdAt: ID!
+  name: String!
+  exercises: String!
+  likes: Int!
+}
+
+type Like @key(pk: "workoutID", sk: "userID") {
+  userID: ID!
+  workoutID: ID!
+  createdAt: String!
+}
+
+type FriendRequestKey {
+  userID: ID!
+  requestingUserID: ID!
+}
+
+type FriendRequestByUserIDRequestedAtKey {
+  userID: ID!
+  requestedAt: ID!
+}
+
+type FollowingKey {
+  userID: ID!
+  followingUserID: ID!
+}
+
+type FollowingByUserIDAcceptedAtKey {
+  userID: ID!
+  acceptedAt: ID!
+}
+
+type FollowingByFollowingUserIDAcceptedAtKey {
+  followingUserID: ID!
+  acceptedAt: ID!
+}
+
+type FeedKey {
+  userID: ID!
+  workoutID: ID!
+}
+
+type FeedByUserIDCreatedAtKey {
+  userID: ID!
+  createdAt: ID!
+}
+
+type WorkoutKey {
+  userID: ID!
+  workoutID: ID!
+}
+
+type WorkoutByUserIDCreatedAtKey {
+  userID: ID!
+  createdAt: ID!
+}
+
+type LikeKey {
+  workoutID: ID!
+  userID: ID!
+}

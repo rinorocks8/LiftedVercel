@@ -1,0 +1,9 @@
+.vercel
+vercel/.env
+vercel/node_modules/
+**/.vercel
+terraform/.terraform
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/parseSchema/node_modules/

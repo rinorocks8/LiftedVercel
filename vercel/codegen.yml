@@ -1,0 +1,6 @@
+overwrite: true
+schema: "../terraform/schema_output.graphql"
+generates:
+  api/graphql.ts:
+    plugins:
+      - "typescript"

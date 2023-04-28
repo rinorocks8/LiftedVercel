@@ -1,0 +1,138 @@
+{
+  "types": {
+    "FriendRequest": {
+      "hash_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "FriendRequestByUserIDRequestedAt",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "requestedAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": {
+        "name": "requestingUserID",
+        "type": "S",
+        "originalType": "ID"
+      }
+    },
+    "Following": {
+      "hash_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "FollowingByUserIDAcceptedAt",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "acceptedAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        },
+        {
+          "name": "FollowingByFollowingUserIDAcceptedAt",
+          "hash_key": {
+            "name": "followingUserID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "acceptedAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": {
+        "name": "followingUserID",
+        "type": "S",
+        "originalType": "ID"
+      }
+    },
+    "Feed": {
+      "hash_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "FeedByUserIDCreatedAt",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "createdAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": {
+        "name": "workoutID",
+        "type": "S",
+        "originalType": "ID"
+      }
+    },
+    "Workout": {
+      "hash_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "WorkoutByUserIDCreatedAt",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "createdAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": {
+        "name": "workoutID",
+        "type": "S",
+        "originalType": "ID"
+      }
+    },
+    "Like": {
+      "hash_key": {
+        "name": "workoutID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [],
+      "range_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      }
+    }
+  }
+}
