@@ -26,8 +26,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const accepted_at = new Date().toISOString();
 
     const friendRequest: FriendRequestKey = {
-      userID: body.requesterID,
-      requestingUserID: username,
+      userID: username,
+      requestingUserID: body.requesterID,
     };
     
     const following1: Following = {

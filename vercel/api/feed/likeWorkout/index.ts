@@ -25,7 +25,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const body = requestBodySchema.parse(await req.json());
 
     const workout: WorkoutKey = {
-      userID: username,
+      userID: body.userID,
       workoutID: body.workoutID
     }
 

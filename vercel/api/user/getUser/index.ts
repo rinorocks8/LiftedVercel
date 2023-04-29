@@ -38,8 +38,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
     };
 
     const friendRequestKey: FriendRequestKey = {
-      userID: username,
-      requestingUserID: body.username,
+      userID: body.username,
+      requestingUserID: username,
     };
 
     const operation = "BatchGetItem";
@@ -57,9 +57,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
     let friendship = "not_following";
     if (username !== body.username) {
       let authResult = await dynamoDBRequest(operation, operation_body);
-      if (!isEmpty(authResult[process.env['Following'] || ""])) {
+      if (!isEmpty(authResult.Responses[process.env['Following'] || ""])) {
         friendship = "following";
-      } else if (!isEmpty(authResult[process.env['FriendRequest'] || ""])) {
+      } else if (!isEmpty(authResult.Responses[process.env['FriendRequest'] || ""])) {
         friendship = "requested";
       }
     } else {

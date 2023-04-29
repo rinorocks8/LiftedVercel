@@ -25,8 +25,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const requested_at = new Date().toISOString();
 
     const friendRequest: FriendRequest = {
-      userID: username,
-      requestingUserID: body.requestingID,
+      userID: body.requestingID,
+      requestingUserID: username,
       requestedAt: requested_at
     };
 

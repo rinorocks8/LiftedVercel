@@ -34,8 +34,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     };
 
     const results = await dynamoDBRequest("Query", params);
-    console.log(results)
-    const following = await Promise.all(
+    const followers = await Promise.all(
       results.Items?.map(async ({ userID }) => {
         const user = await cognitoRequest(	
           "AdminGetUser", {
@@ -53,7 +52,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     );
 
     return responder.success({
-      following: following,
+      followers: followers,
     });
   } catch (error) {
     return responder.error(error.message ? error.message : error);

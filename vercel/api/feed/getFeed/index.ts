@@ -3,7 +3,7 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Feed, Workout } from '../../graphql'
+import { Feed, LikeKey, Workout } from '../../graphql'
 import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
 import { cognitoRequest } from "../../utils/cognitoRequest";
 
@@ -57,20 +57,23 @@ export default async function handleRequest(req: Request): Promise<Response> {
     workouts = await Promise.all(
       workouts.Responses[process.env['Workout'] || ""].map(
         async ({ userID, workoutID, createdAt, name, exercises, likes }) => {
-          // const getLiked = {
-          //   TableName: process.env['Like'],
-          //   KeyConditionExpression: "workoutID = :hkey and userID = :skey",
-          //   ExpressionAttributeValues: {
-          //     ":hkey": {
-          //       "S": workoutID,
-          //     },
-          //     ":skey": {
-          //       "S": username,
-          //     },
-          //   },
-          // };
-          // const likeResults = await dynamoDBRequest("Query", getLiked);
-          // const liked = likeResults.Items.length === 1;
+
+          const like: LikeKey = {
+            workoutID: workoutID.S,
+            userID: username,
+          }
+
+          const operation = "GetItem";
+          const operation_body = {
+            TableName: process.env['Like'],
+            Key: convertToDynamoDBItem(like),
+          };
+          const result = await dynamoDBRequest(operation, operation_body);
+
+          let liked: boolean = false;
+          if (!isEmpty(result)) {
+            liked = true;
+          }
           
           const user = await cognitoRequest(	
               "AdminGetUser", {
@@ -88,7 +91,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
             createdAt: createdAt.S,
             exercises: JSON.parse(exercises.S),
             likes: likes.N,
-            liked: false,
+            liked: liked,
           };
         }
       )
@@ -100,4 +103,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
   } catch (error) {
     return responder.error(error);
   }
+}
+
+function isEmpty(obj: object): boolean {
+  for (const _ in obj) return false;
+  return true;
 }

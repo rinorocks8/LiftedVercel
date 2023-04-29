@@ -94,10 +94,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
       },
     };
     const results = await dynamoDBRequest("Query", getFriendsParams);
-    const followerIDs = results.Items;
+    const followerIDs = results.Items.map(item => item.userID.S);
     followerIDs.push(username);
 
-    
     for (const followerID of followerIDs) {
       const post: Feed = {
         createdAt: body.createdAt,
