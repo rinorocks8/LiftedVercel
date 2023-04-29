@@ -1,5 +1,6 @@
 .vercel
 vercel/.env
+vercel/raw.env
 vercel/node_modules/
 **/.vercel
 terraform/.terraform

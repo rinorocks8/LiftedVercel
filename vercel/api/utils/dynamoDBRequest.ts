@@ -1,13 +1,4 @@
 // utils/dynamoDBRequest.ts
-const AWS_ACCESS_KEY_ID = "AKIAXCKDHW3N7NCXH2VG";
-const AWS_SECRET_ACCESS_KEY = "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";
-const AWS_REGION = "us-east-1";
-const AWS_SERVICE_NAME = "dynamodb";
-const AWS_API_ENDPOINT = "dynamodb.us-east-1.amazonaws.com";
-const AWS_HTTP_METHOD = "POST";
-const AWS_API_PATH = "/";
-const AWS_API_QUERY_PARAMS = {};
-
 const encoder = new TextEncoder();
 
 function bufferToHex(buffer: ArrayBuffer): string {
@@ -25,6 +16,15 @@ async function hmac(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
 }
 
 export async function dynamoDBRequest(operation: string, body: object): Promise<any> {
+  const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID as string;
+  const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY as string;
+  const AWS_REGION = process.env.AWS_REGION as string;
+  const AWS_SERVICE_NAME = "dynamodb";
+  const AWS_API_ENDPOINT = `${AWS_SERVICE_NAME}.${AWS_REGION}.amazonaws.com`;
+  const AWS_HTTP_METHOD = "POST";
+  const AWS_API_PATH = "/";
+  const AWS_API_QUERY_PARAMS = {};
+
   const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, "");
   const date = timestamp.substr(0, 8);
 
