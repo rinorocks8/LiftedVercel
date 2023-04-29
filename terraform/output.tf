@@ -8,3 +8,14 @@ resource "local_file" "env_file" {
   ], ["userPoolID=${aws_cognito_user_pool.lifted.id}", "API_KEY=${random_uuid.test.result}"])
   filename = "${path.module}/../vercel/.env"
 }
+
+resource "null_resource" "generate_graphql" {
+  provisioner "local-exec" {
+    command     = "npx graphql-codegen"
+    working_dir = "../vercel"
+  }
+
+  triggers = {
+    always_run = timestamp()
+  }
+}

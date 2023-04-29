@@ -91,7 +91,7 @@ export type LikeKey = {
 
 export type Workout = {
   __typename?: 'Workout';
-  createdAt: Scalars['ID'];
+  createdAt: Scalars['String'];
   exercises: Scalars['String'];
   likes: Scalars['Int'];
   name: Scalars['String'];

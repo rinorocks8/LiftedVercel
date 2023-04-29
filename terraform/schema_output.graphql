@@ -29,7 +29,7 @@ type Workout
   @gsi(pk: "userID", sk: "createdAt") {
   userID: ID!
   workoutID: ID!
-  createdAt: ID!
+  createdAt: String!
   name: String!
   exercises: String!
   likes: Int!
