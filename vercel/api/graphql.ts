@@ -12,12 +12,45 @@ export type Scalars = {
   Float: number;
 };
 
+export type Exercise = {
+  __typename?: 'Exercise';
+  exerciseID: Scalars['ID'];
+  lastUpdated: Scalars['Int'];
+  sets?: Maybe<Scalars['String']>;
+  userID: Scalars['ID'];
+  variationID: Scalars['ID'];
+  workoutID: Scalars['ID'];
+};
+
+export type ExerciseByUserIdLastUpdatedKey = {
+  __typename?: 'ExerciseByUserIDLastUpdatedKey';
+  lastUpdated: Scalars['ID'];
+  userID: Scalars['ID'];
+};
+
+export type ExerciseByUserIdVariationIdKey = {
+  __typename?: 'ExerciseByUserIDVariationIDKey';
+  userID: Scalars['ID'];
+  variationID: Scalars['ID'];
+};
+
+export type ExerciseByWorkoutIdVariationIdKey = {
+  __typename?: 'ExerciseByWorkoutIDVariationIDKey';
+  variationID: Scalars['ID'];
+  workoutID: Scalars['ID'];
+};
+
+export type ExerciseKey = {
+  __typename?: 'ExerciseKey';
+  exerciseID: Scalars['ID'];
+};
+
 export type Feed = {
   __typename?: 'Feed';
   createdAt: Scalars['String'];
+  postID: Scalars['ID'];
+  postUserID: Scalars['ID'];
   userID: Scalars['ID'];
-  workoutID: Scalars['String'];
-  workoutUserID: Scalars['ID'];
 };
 
 export type FeedByUserIdCreatedAtKey = {
@@ -28,8 +61,8 @@ export type FeedByUserIdCreatedAtKey = {
 
 export type FeedKey = {
   __typename?: 'FeedKey';
+  postID: Scalars['ID'];
   userID: Scalars['ID'];
-  workoutID: Scalars['ID'];
 };
 
 export type Following = {
@@ -79,34 +112,60 @@ export type FriendRequestKey = {
 export type Like = {
   __typename?: 'Like';
   createdAt: Scalars['String'];
+  postID: Scalars['ID'];
   userID: Scalars['ID'];
-  workoutID: Scalars['ID'];
 };
 
 export type LikeKey = {
   __typename?: 'LikeKey';
+  postID: Scalars['ID'];
+  userID: Scalars['ID'];
+};
+
+export type Post = {
+  __typename?: 'Post';
+  createdAt: Scalars['String'];
+  likes: Scalars['Int'];
+  postID: Scalars['ID'];
   userID: Scalars['ID'];
   workoutID: Scalars['ID'];
+};
+
+export type PostByUserIdCreatedAtKey = {
+  __typename?: 'PostByUserIDCreatedAtKey';
+  createdAt: Scalars['ID'];
+  userID: Scalars['ID'];
+};
+
+export type PostKey = {
+  __typename?: 'PostKey';
+  postID: Scalars['ID'];
 };
 
 export type Workout = {
   __typename?: 'Workout';
-  createdAt: Scalars['String'];
-  exercises: Scalars['String'];
-  likes: Scalars['Int'];
-  name: Scalars['String'];
+  endTime?: Maybe<Scalars['String']>;
+  exerciseGroups?: Maybe<Scalars['String']>;
+  lastUpdated: Scalars['Int'];
+  name?: Maybe<Scalars['String']>;
+  startTime: Scalars['String'];
   userID: Scalars['ID'];
   workoutID: Scalars['ID'];
 };
 
-export type WorkoutByUserIdCreatedAtKey = {
-  __typename?: 'WorkoutByUserIDCreatedAtKey';
-  createdAt: Scalars['ID'];
+export type WorkoutByUserIdLastUpdatedKey = {
+  __typename?: 'WorkoutByUserIDLastUpdatedKey';
+  lastUpdated: Scalars['ID'];
+  userID: Scalars['ID'];
+};
+
+export type WorkoutByUserIdStartTimeKey = {
+  __typename?: 'WorkoutByUserIDStartTimeKey';
+  startTime: Scalars['ID'];
   userID: Scalars['ID'];
 };
 
 export type WorkoutKey = {
   __typename?: 'WorkoutKey';
-  userID: Scalars['ID'];
   workoutID: Scalars['ID'];
 };

@@ -3,9 +3,10 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import * as responder from '../../utils/responder';
 import { z } from "zod";
 
-import { LikeKey } from '../../graphql'
+import { LikeKey, Post, WorkoutKey } from '../../graphql'
 import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
 import { cognitoRequest } from "../../utils/cognitoRequest";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -24,68 +25,78 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const body = requestBodySchema.parse(await req.json());
 
     const getFeedParams = {
-      TableName: process.env['Workout'],
-      IndexName: "WorkoutByUserIDCreatedAt",
+      TableName: process.env['Post'],
+      IndexName: "PostByUserIDCreatedAt",
       KeyConditionExpression: "userID = :hkey",
-      ExpressionAttributeValues: {
-        ":hkey": {
-          "S": body.userID,
-        }
-      },
+      ExpressionAttributeValues: AttributeValue.wrap({
+        ":hkey": body.userID,
+      }),
     };
     
-    let workouts = await dynamoDBRequest("Query", getFeedParams);
-    if (workouts.Items.length === 0) {
+    let posts = await dynamoDBRequest("Query", getFeedParams);
+    if (posts.Items.length === 0) {
       return responder.success({
-        workouts: [],
+        posts: [],
       });
     }
-    
-    workouts = await Promise.all(
-      workouts.Items.map(
-        async ({ userID, workoutID, createdAt, name, exercises, likes }) => {
+
+    posts = await Promise.all(
+      posts.Items.map(
+        async (_post) => {
+          const post: Post = AttributeValue.unwrap(_post);
 
           const like: LikeKey = {
-            workoutID: workoutID.S,
+            postID: post.postID,
             userID: username,
           }
-
-          const operation = "GetItem";
-          const operation_body = {
-            TableName: process.env['Like'],
-            Key: convertToDynamoDBItem(like),
+          const workout: WorkoutKey = {
+            workoutID: post.workoutID,
+          }
+          const getParams = {
+            RequestItems: {
+              [process.env['Like'] || ""]: {
+                Keys: [
+                  AttributeValue.wrap(like)
+                ]
+              },
+              [process.env['Workout'] || ""]: {
+                Keys: [
+                  AttributeValue.wrap(workout),
+                ]
+              },
+            },
           };
-          const result = await dynamoDBRequest(operation, operation_body);
+      
+          let requests = await dynamoDBRequest("BatchGetItem", getParams);
 
           let liked: boolean = false;
-          if (!isEmpty(result)) {
+          if (requests.Responses[process.env['Like'] || ""].length > 0) {
             liked = true;
           }
           
           const user = await cognitoRequest(	
               "AdminGetUser", {
-                Username: userID.S,
+                Username: post.userID,
                 UserPoolId: process.env.userPoolID
             });
     
           return {
-            id: workoutID?.S,
-            userID: userID.S,
+            id: post.postID,
+            userID: post.userID,
             username: user?.UserAttributes?.find(
               (obj) => obj.Name === "preferred_username"
             )?.Value,
-            name: name?.S,
-            createdAt: createdAt.S,
-            exercises: JSON.parse(exercises.S),
-            likes: likes.N,
+            createdAt: post.createdAt,
+            likes: post.likes,
             liked: liked,
+            workout: requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: post.workoutID}
           };
         }
       )
     );
     
     return responder.success({
-      workouts: workouts,
+      posts: posts,
     });
   } catch (error) {
     return responder.error(error);

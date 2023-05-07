@@ -89,20 +89,20 @@
         }
       ],
       "range_key": {
-        "name": "workoutID",
+        "name": "postID",
         "type": "S",
         "originalType": "ID"
       }
     },
-    "Workout": {
+    "Post": {
       "hash_key": {
-        "name": "userID",
+        "name": "postID",
         "type": "S",
         "originalType": "ID"
       },
       "gsi": [
         {
-          "name": "WorkoutByUserIDCreatedAt",
+          "name": "PostByUserIDCreatedAt",
           "hash_key": {
             "name": "userID",
             "type": "S",
@@ -115,15 +115,11 @@
           }
         }
       ],
-      "range_key": {
-        "name": "workoutID",
-        "type": "S",
-        "originalType": "ID"
-      }
+      "range_key": null
     },
     "Like": {
       "hash_key": {
-        "name": "workoutID",
+        "name": "postID",
         "type": "S",
         "originalType": "ID"
       },
@@ -133,6 +129,91 @@
         "type": "S",
         "originalType": "ID"
       }
+    },
+    "Exercise": {
+      "hash_key": {
+        "name": "exerciseID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "ExerciseByUserIDLastUpdated",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "lastUpdated",
+            "type": "N",
+            "originalType": "ID"
+          }
+        },
+        {
+          "name": "ExerciseByUserIDVariationID",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "variationID",
+            "type": "S",
+            "originalType": "ID"
+          }
+        },
+        {
+          "name": "ExerciseByWorkoutIDVariationID",
+          "hash_key": {
+            "name": "workoutID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "variationID",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": null
+    },
+    "Workout": {
+      "hash_key": {
+        "name": "workoutID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "WorkoutByUserIDLastUpdated",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "lastUpdated",
+            "type": "N",
+            "originalType": "ID"
+          }
+        },
+        {
+          "name": "WorkoutByUserIDStartTime",
+          "hash_key": {
+            "name": "userID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "startTime",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": null
     }
   }
 }

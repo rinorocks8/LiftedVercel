@@ -15,30 +15,53 @@ type Following
   acceptedAt: String!
 }
 
-type Feed
-  @key(pk: "userID", sk: "workoutID")
-  @gsi(pk: "userID", sk: "createdAt") {
+type Feed @key(pk: "userID", sk: "postID") @gsi(pk: "userID", sk: "createdAt") {
   userID: ID!
-  workoutID: String!
-  workoutUserID: ID!
+  postID: ID!
+  postUserID: ID!
   createdAt: String!
 }
 
-type Workout
-  @key(pk: "userID", sk: "workoutID")
-  @gsi(pk: "userID", sk: "createdAt") {
+type Post @key(pk: "postID") @gsi(pk: "userID", sk: "createdAt") {
+  postID: ID!
   userID: ID!
   workoutID: ID!
   createdAt: String!
-  name: String!
-  exercises: String!
   likes: Int!
 }
 
-type Like @key(pk: "workoutID", sk: "userID") {
+type Like @key(pk: "postID", sk: "userID") {
   userID: ID!
-  workoutID: ID!
+  postID: ID!
   createdAt: String!
+}
+
+type Exercise
+  @key(pk: "exerciseID")
+  @gsi(pk: "userID", sk: "lastUpdated")
+  @gsi(pk: "userID", sk: "variationID")
+  @gsi(pk: "workoutID", sk: "variationID") {
+  exerciseID: ID!
+  userID: ID!
+  lastUpdated: Int!
+
+  workoutID: ID!
+  variationID: ID!
+  sets: String
+}
+
+type Workout
+  @key(pk: "workoutID")
+  @gsi(pk: "userID", sk: "lastUpdated")
+  @gsi(pk: "userID", sk: "startTime") {
+  workoutID: ID!
+  userID: ID!
+  lastUpdated: Int!
+  startTime: String!
+
+  exerciseGroups: String
+  name: String
+  endTime: String
 }
 
 type FriendRequestKey {
@@ -68,7 +91,7 @@ type FollowingByFollowingUserIDAcceptedAtKey {
 
 type FeedKey {
   userID: ID!
-  workoutID: ID!
+  postID: ID!
 }
 
 type FeedByUserIDCreatedAtKey {
@@ -76,17 +99,52 @@ type FeedByUserIDCreatedAtKey {
   createdAt: ID!
 }
 
-type WorkoutKey {
-  userID: ID!
-  workoutID: ID!
+type PostKey {
+  postID: ID!
+  
 }
 
-type WorkoutByUserIDCreatedAtKey {
+type PostByUserIDCreatedAtKey {
   userID: ID!
   createdAt: ID!
 }
 
 type LikeKey {
-  workoutID: ID!
+  postID: ID!
   userID: ID!
+}
+
+type ExerciseKey {
+  exerciseID: ID!
+  
+}
+
+type ExerciseByUserIDLastUpdatedKey {
+  userID: ID!
+  lastUpdated: ID!
+}
+
+type ExerciseByUserIDVariationIDKey {
+  userID: ID!
+  variationID: ID!
+}
+
+type ExerciseByWorkoutIDVariationIDKey {
+  workoutID: ID!
+  variationID: ID!
+}
+
+type WorkoutKey {
+  workoutID: ID!
+  
+}
+
+type WorkoutByUserIDLastUpdatedKey {
+  userID: ID!
+  lastUpdated: ID!
+}
+
+type WorkoutByUserIDStartTimeKey {
+  userID: ID!
+  startTime: ID!
 }

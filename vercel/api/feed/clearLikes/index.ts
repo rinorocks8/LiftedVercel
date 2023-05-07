@@ -12,7 +12,7 @@ export const config = {
 const API_KEY = process.env.API_KEY;
 
 const requestBodySchema = z.object({
-  workoutID: z.string().min(1),
+  postID: z.string().min(1),
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -26,13 +26,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
 
     const queryParamsDynamo = {
       TableName: process.env["Like"],
-      KeyConditionExpression: "workoutID = :pk",
+      KeyConditionExpression: "postID = :pk",
       ExpressionAttributeValues: {
         ":pk": {
-          "S": body.workoutID,
+          "S": body.postID,
         }
       },
-      ProjectionExpression: "workoutID, userID",
+      ProjectionExpression: "postID, userID",
       ExclusiveStartKey: null,
     };
     

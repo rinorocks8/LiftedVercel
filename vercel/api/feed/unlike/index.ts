@@ -5,16 +5,17 @@ import { z } from "zod";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Like, WorkoutKey } from '../../graphql'
+import { Like, LikeKey, PostKey, WorkoutKey } from '../../graphql'
 import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
 };
 
 const requestBodySchema = z.object({
-  workoutID: z.string().min(1),
-  userID: z.string().min(1),
+  postID: z.string().min(1)
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -24,39 +25,35 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
     const body = requestBodySchema.parse(await req.json());
 
-    const workout: WorkoutKey = {
-      userID: body.userID,
-      workoutID: body.workoutID
+    const post: PostKey = {
+      postID: body.postID,
     }
 
-    const like: Like = {
+    const like: LikeKey = {
       userID: username,
-      workoutID: body.workoutID,
-      createdAt: new Date().toISOString(),
+      postID: body.postID,
     };
     
     const operation_body = {
       TransactItems: [
         {
           Update: {
-            TableName: process.env["Workout"],
-            Key: convertToDynamoDBItem(workout),
+            TableName: process.env["Post"],
+            Key: AttributeValue.wrap(post),
             UpdateExpression: "SET #likes = #likes + :incr",
-            ConditionExpression: "attribute_exists(userID) and attribute_exists(workoutID)",
+            ConditionExpression: "attribute_exists(userID) and attribute_exists(postID)",
             ExpressionAttributeNames: { "#likes": "likes" },
-            ExpressionAttributeValues: {
-              ":incr": {
-                "N": '1'
-              },
-            },
+            ExpressionAttributeValues: AttributeValue.wrap({
+              ":incr": -1
+            }),
           },
         },
         {
-          Put: {
+          Delete: {
             TableName: process.env["Like"],
-            Item: convertToDynamoDBItem(like),
+            Key: AttributeValue.wrap(like),
             ConditionExpression:
-              "attribute_not_exists(userID) and attribute_not_exists(workoutID)",
+              "attribute_exists(userID) and attribute_exists(postID)",
           },
         },
       ],
@@ -66,12 +63,12 @@ export default async function handleRequest(req: Request): Promise<Response> {
       if (RegExp(/\[ConditionalCheckFailed,/gi).test(error.message))
         throw new BodyError("Workout Not Found");
       if (RegExp(/\, ConditionalCheckFailed]/gi).test(error.message))
-        throw new BodyError("Workout Already Liked");
+        throw new BodyError("Workout Not Liked");
       throw error;
     })
     
     return responder.success({
-      result: "Liked",
+      result: "Unliked",
     });
   } catch (error) {
     return responder.error(error);
