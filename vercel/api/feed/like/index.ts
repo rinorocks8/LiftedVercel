@@ -1,13 +1,11 @@
 
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
-import { z } from "zod";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
+import { Like, WorkoutKey } from '../../graphql'
 
-import { Like, PostKey, WorkoutKey } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
-
+import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
@@ -15,7 +13,7 @@ export const config = {
 };
 
 const requestBodySchema = z.object({
-  postID: z.string().min(1),
+  workoutID: z.string().min(1),
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -25,13 +23,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
     const body = requestBodySchema.parse(await req.json());
 
-    const post: PostKey = {
-      postID: body.postID,
+    const workout: WorkoutKey = {
+      workoutID: body.workoutID,
     }
 
     const like: Like = {
       userID: username,
-      postID: body.postID,
+      workoutID: body.workoutID,
       createdAt: new Date().toISOString(),
     };
     
@@ -39,10 +37,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
       TransactItems: [
         {
           Update: {
-            TableName: process.env["Post"],
-            Key: AttributeValue.wrap(post),
+            TableName: process.env["Workout"],
+            Key: AttributeValue.wrap(workout),
             UpdateExpression: "SET #likes = #likes + :incr",
-            ConditionExpression: "attribute_exists(userID) and attribute_exists(postID)",
+            ConditionExpression: "attribute_exists(userID) and attribute_exists(workoutID)",
             ExpressionAttributeNames: { "#likes": "likes" },
             ExpressionAttributeValues: AttributeValue.wrap({
               ":incr": 1
@@ -54,7 +52,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
             TableName: process.env["Like"],
             Item: AttributeValue.wrap(like),
             ConditionExpression:
-              "attribute_not_exists(userID) and attribute_not_exists(postID)",
+              "attribute_not_exists(userID) and attribute_not_exists(workoutID)",
           },
         },
       ],

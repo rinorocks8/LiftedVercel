@@ -1,11 +1,10 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import * as responder from '../../utils/responder';
-import { z } from "zod";
-
-import { LikeKey, Post, WorkoutKey } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { LikeKey, Workout } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
+
+import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
@@ -25,78 +24,72 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const body = requestBodySchema.parse(await req.json());
 
     const getFeedParams = {
-      TableName: process.env['Post'],
-      IndexName: "PostByUserIDCreatedAt",
+      TableName: process.env['Workout'],
+      IndexName: "WorkoutByUserIDStartTime",
       KeyConditionExpression: "userID = :hkey",
       ExpressionAttributeValues: AttributeValue.wrap({
         ":hkey": body.userID,
       }),
     };
     
-    let posts = await dynamoDBRequest("Query", getFeedParams);
-    if (posts.Items.length === 0) {
+    let results = await dynamoDBRequest("Query", getFeedParams);
+    if (results.Items.length === 0) {
       return responder.success({
-        posts: [],
+        workouts: [],
       });
     }
 
-    posts = await Promise.all(
-      posts.Items.map(
-        async (_post) => {
-          const post: Post = AttributeValue.unwrap(_post);
+    const workouts = await Promise.all(
+      results.Items.map(
+        async (_workout) => {
+          const workout: Workout = AttributeValue.unwrap(_workout);
 
-          const like: LikeKey = {
-            postID: post.postID,
+          const likeKey: LikeKey = {
+            workoutID: workout.workoutID,
             userID: username,
           }
-          const workout: WorkoutKey = {
-            workoutID: post.workoutID,
-          }
+          //Parallelize this?
           const getParams = {
             RequestItems: {
               [process.env['Like'] || ""]: {
                 Keys: [
-                  AttributeValue.wrap(like)
-                ]
-              },
-              [process.env['Workout'] || ""]: {
-                Keys: [
-                  AttributeValue.wrap(workout),
+                  AttributeValue.wrap(likeKey)
                 ]
               },
             },
           };
       
+          //TODO Parallelize this?
           let requests = await dynamoDBRequest("BatchGetItem", getParams);
+          const user = await cognitoRequest(	
+            "AdminGetUser", {
+              Username: workout.userID,
+              UserPoolId: process.env.userPoolID
+          });
 
           let liked: boolean = false;
           if (requests.Responses[process.env['Like'] || ""].length > 0) {
             liked = true;
           }
-          
-          const user = await cognitoRequest(	
-              "AdminGetUser", {
-                Username: post.userID,
-                UserPoolId: process.env.userPoolID
-            });
     
           return {
-            id: post.postID,
-            userID: post.userID,
+            id: workout.workoutID,
+            userID: workout.userID,
             username: user?.UserAttributes?.find(
               (obj) => obj.Name === "preferred_username"
             )?.Value,
-            createdAt: post.createdAt,
-            likes: post.likes,
+            createdAt: workout.startTime,
+            likes: workout.likes,
             liked: liked,
-            workout: requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: post.workoutID}
+            workout: workout.workout
           };
         }
       )
     );
     
+    
     return responder.success({
-      posts: posts,
+      workouts: workouts,
     });
   } catch (error) {
     return responder.error(error);

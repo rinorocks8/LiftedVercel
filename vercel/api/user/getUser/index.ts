@@ -1,11 +1,12 @@
-import { z } from "zod";
 import { ParameterError } from "../../utils/errors";
 import * as responder from "../../utils/responder";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { cognitoRequest } from "../../utils/cognitoRequest";
 import { FollowingKey, FriendRequestKey } from "../../graphql";
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
+
+import { z } from "zod";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -46,10 +47,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const operation_body = {
       RequestItems: {
         [process.env['Following'] || ""]: {
-          Keys: [convertToDynamoDBItem(followingKey)]
+          Keys: [AttributeValue.wrap(followingKey)]
         },
         [process.env['FriendRequest'] || ""]: {
-          Keys: [convertToDynamoDBItem(friendRequestKey)]
+          Keys: [AttributeValue.wrap(friendRequestKey)]
         }
       }
     };

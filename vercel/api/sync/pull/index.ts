@@ -44,7 +44,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
       ExpressionAttributeValues: AttributeValue.wrap({
         ":pk": username,
         ":sk": body.lastUpdated,
-      }),
+      })
     };
     const workoutQueryParams = {
       TableName: process.env['Workout'],
@@ -54,6 +54,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
         ":pk": username,
         ":sk": body.lastUpdated,
       }),
+      ProjectionExpression: "workoutID, userID, lastUpdated, workout"
     };
 
     let [exerciseUpdates, workoutUpdates] = await Promise.all([fetchAllData(exerciseQueryParams), fetchAllData(workoutQueryParams)]);

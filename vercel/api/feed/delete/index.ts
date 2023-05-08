@@ -4,7 +4,7 @@ import { z } from "zod";
 import { AuthenticationError, BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { PostKey } from '../../graphql'
+import { WorkoutKey } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
 
 
@@ -15,7 +15,7 @@ export const config = {
 const API_KEY = process.env.API_KEY;
 
 const requestBodySchema = z.object({
-  postID: z.string().min(1),
+  workoutID: z.string().min(1),
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -25,37 +25,35 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
     const body = requestBodySchema.parse(await req.json());
 
-    const post: PostKey = {
-      postID: body.postID
+    const workout: WorkoutKey = {
+      workoutID: body.workoutID
     }
     
     const params = {
-      TableName: process.env["Post"],
-      Key: AttributeValue.wrap(post),
-      ReturnValues: "ALL_OLD",
-      ConditionExpression: "userID = :hkey",
+      TableName: process.env["Workout"],
+      Key: AttributeValue.wrap(workout),
+      UpdateExpression: "SET visible = :visible",
+      ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
       ExpressionAttributeValues: AttributeValue.wrap({
-        ":hkey":  username
+        ":visible": 'false',
+        ":userID": username
       }),
     };
     
-    const data = await dynamoDBRequest("DeleteItem", params).catch(error => {
+    const data = await dynamoDBRequest("UpdateItem", params).catch(error => {
       if (RegExp(/The conditional request failed/gi).test(error.message))
         throw new AuthenticationError("Cannot Delete Another Users Workout");
       throw error;
     })
 
-
-    if (isEmpty(data)) throw new BodyError("Post Not Found");
-
-    // Logic can be handled after response
-    fetch('http://localhost:3000/api/feed/clearLikes', {
-      method: 'POST',
-      headers: {
-        'x-api-key': API_KEY || ""
-      },
-      body: JSON.stringify({ postID: body.postID})
-    });
+    // // Logic can be handled after response
+    // fetch('http://localhost:3000/api/feed/clearLikes', {
+    //   method: 'POST',
+    //   headers: {
+    //     'x-api-key': API_KEY || ""
+    //   },
+    //   body: JSON.stringify({ postID: body.postID})
+    // });
     
     return responder.success({
       result: "Deleted Post",

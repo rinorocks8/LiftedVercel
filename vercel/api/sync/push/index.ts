@@ -1,9 +1,11 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
-import { z } from "zod";
 import * as responder from '../../utils/responder';
-
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
+import { ExerciseKey, WorkoutKey } from '../../graphql'
+
+import { z } from "zod";
+import { AttributeValue } from 'dynamodb-data-types';
+
 
 export const config = {
   runtime: "experimental-edge",
@@ -11,18 +13,21 @@ export const config = {
 
 const requestBodySchema = z.object({
   exercises: z.array(z.object({
-    id: z.string(),
     lastUpdated: z.number(),
-    name: z.string(),
     userID: z.string(),
-    isDirty: z.boolean().optional(),
+
+    exerciseID: z.string(),
+    workoutID: z.string(),
+    variationID: z.string(),
+    exercise_sets: z.string()
   })).optional(),
   workouts: z.array(z.object({
-    id: z.string(),
     lastUpdated: z.number(),
-    name: z.string(),
     userID: z.string(),
-    isDirty: z.boolean().optional(),
+
+    workoutID: z.string(),
+    workout: z.string(),
+    startTime: z.number()
   })).optional(),
 });
 
@@ -43,22 +48,41 @@ export default async function handleRequest(req: Request): Promise<Response> {
 
     const transactItems: any = [];
 
-    for (let exercise of body.exercises ?? []) {
-      delete exercise.isDirty;
+    for (let _exercise of body.exercises ?? []) {
+      let exerciseKey: ExerciseKey = {
+        exerciseID: _exercise.exerciseID
+      }
       transactItems.push({
-        Put: {
+        Update: {
           TableName: process.env['Exercise'],
-          Item: convertToDynamoDBItem(exercise),
+          Key: AttributeValue.wrap(exerciseKey),
+          UpdateExpression: "SET variationID = :new_variationID, exercise_sets = :new_exercise_sets, userID = :new_userID, lastUpdated = :new_lastUpdated, workoutID = :new_workoutID",
+          ExpressionAttributeValues: AttributeValue.wrap({
+            ":new_userID": _exercise.userID,
+            ":new_lastUpdated":  _exercise.lastUpdated,
+            ":new_workoutID":  _exercise.workoutID,
+            ":new_variationID": _exercise.variationID,
+            ":new_exercise_sets": _exercise.exercise_sets,
+          }),
         },
       })
     }
 
-    for (let workout of body.workouts ?? []) {
-      delete workout.isDirty;
+    for (let _workout of body.workouts ?? []) {
+      let workoutKey: WorkoutKey = {
+        workoutID: _workout.workoutID
+      }
       transactItems.push({
-        Put: {
+        Update: {
           TableName: process.env['Workout'],
-          Item: convertToDynamoDBItem(workout),
+          Key: AttributeValue.wrap(workoutKey),
+          UpdateExpression: "SET workout = :new_workout, lastUpdated = :new_lastUpdated, userID = :new_userID, startTime = :new_startTime",
+          ExpressionAttributeValues: AttributeValue.wrap({
+            ":new_userID": _workout.userID,
+            ":new_lastUpdated": _workout.lastUpdated,
+            ":new_workout": _workout.workout,
+            ":new_startTime": _workout.startTime
+          }),
         },
       })
     }

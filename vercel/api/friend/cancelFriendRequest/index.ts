@@ -5,7 +5,7 @@ import { BodyError } from "../../utils/errors";
 import * as responder from "../../utils/responder";
 
 import { FriendRequestKey } from "../../graphql";
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -31,7 +31,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const operation = "DeleteItem";
     const operation_body = {
       TableName: process.env['FriendRequest'],
-      Key: convertToDynamoDBItem(friendRequestKey),
+      Key: AttributeValue.wrap(friendRequestKey),
       ConditionExpression: "attribute_exists(userID) and attribute_exists(requestingUserID)",
     };
 

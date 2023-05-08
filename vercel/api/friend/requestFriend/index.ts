@@ -4,7 +4,7 @@ import { z } from "zod";
 import * as responder from '../../utils/responder';
 
 import { FriendRequest } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -33,7 +33,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const operation = "PutItem";
     const operation_body = {
       TableName: process.env['FriendRequest'],
-      Item: convertToDynamoDBItem(friendRequest),
+      Item: AttributeValue.wrap(friendRequest),
     };
 
     await dynamoDBRequest(operation, operation_body);

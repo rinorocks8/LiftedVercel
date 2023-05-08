@@ -5,7 +5,7 @@ import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
 import { FollowingKey } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -39,14 +39,14 @@ export default async function handleRequest(req: Request): Promise<Response> {
 				{
 					Delete: {
 						TableName: process.env['Following'],
-            Key: convertToDynamoDBItem(following1),
+            Key: AttributeValue.wrap(following1),
 						ConditionExpression: 'attribute_exists(userID) and attribute_exists(followingUserID)'
 					}
         },
         {
 					Delete: {
 						TableName: process.env['Following'],
-            Key: convertToDynamoDBItem(following2),
+            Key: AttributeValue.wrap(following2),
 						ConditionExpression: 'attribute_exists(userID) and attribute_exists(followingUserID)'
 					}
 				},

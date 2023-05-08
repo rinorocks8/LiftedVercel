@@ -3,8 +3,7 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Feed, LikeKey, Post, Workout, WorkoutKey } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { Feed, LikeKey, Workout, WorkoutKey } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
 import { AttributeValue } from 'dynamodb-data-types';
 
@@ -26,87 +25,74 @@ export default async function handleRequest(req: Request): Promise<Response> {
       }),
     };
     
-    const results = await dynamoDBRequest("Query", getFeedParams);
+    let results = await dynamoDBRequest("Query", getFeedParams);
     if (results.Items.length === 0) {
       return responder.success({
-        posts: [],
+        workouts: [],
       });
     }
 
-    const getPostsParams = {
-      RequestItems: {
-        [process.env['Post'] || ""]: {
-          Keys: results.Items.map((feed: Feed) => ({
-            "postID": feed.postID
-          })),
-        },
-      },
-    };
+    const workouts = await Promise.all(
+      results.Items.map(
+        async (_feed) => {
+          const feed: Feed = AttributeValue.unwrap(_feed);
 
-    let posts = await dynamoDBRequest("BatchGetItem", getPostsParams);
-    if (posts.Responses[process.env['Post'] || ""].length === 0) {
-      return responder.success({
-        posts: [],
-      });
-    }
-    
-    posts = await Promise.all(
-      posts.Responses[process.env['Post'] || ""].map(
-        async (_post) => {
-          const post: Post = AttributeValue.unwrap(_post);
-
-          const like: LikeKey = {
-            postID: post.postID,
+          const likeKey: LikeKey = {
+            workoutID: feed.workoutID,
             userID: username,
           }
-          const workout: WorkoutKey = {
-            workoutID: post.workoutID,
+          const workoutKey: WorkoutKey = {
+            workoutID: feed.workoutID,
           }
+
+          //Parallelize this?
           const getParams = {
             RequestItems: {
               [process.env['Like'] || ""]: {
                 Keys: [
-                  AttributeValue.wrap(like)
+                  AttributeValue.wrap(likeKey)
                 ]
               },
               [process.env['Workout'] || ""]: {
                 Keys: [
-                  AttributeValue.wrap(workout),
+                  AttributeValue.wrap(workoutKey),
                 ]
               },
             },
           };
       
+          //TODO Parallelize this?
           let requests = await dynamoDBRequest("BatchGetItem", getParams);
+          const user = await cognitoRequest(	
+            "AdminGetUser", {
+              Username: feed.workoutUserID,
+              UserPoolId: process.env.userPoolID
+          });
 
           let liked: boolean = false;
           if (requests.Responses[process.env['Like'] || ""].length > 0) {
             liked = true;
           }
-          
-          const user = await cognitoRequest(	
-              "AdminGetUser", {
-                Username: post.userID,
-                UserPoolId: process.env.userPoolID
-            });
+
+          const workout: Workout = requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: feed.workoutID}
     
           return {
-            id: post.postID,
-            userID: post.userID,
+            id: workout.workoutID,
+            userID: workout.userID,
             username: user?.UserAttributes?.find(
               (obj) => obj.Name === "preferred_username"
             )?.Value,
-            createdAt: post.createdAt,
-            likes: post.likes,
+            createdAt: feed.createdAt,
+            likes: workout.likes,
             liked: liked,
-            workout: requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: post.workoutID}
+            workout: workout.workout
           };
         }
       )
     );
     
     return responder.success({
-      posts: posts,
+      workouts: workouts,
     });
   } catch (error) {
     return responder.error(error);

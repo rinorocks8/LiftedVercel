@@ -64,6 +64,7 @@ export async function dynamoDBRequest(operation: string, body: object): Promise<
     const response = await fetch(`https://${AWS_API_ENDPOINT}${AWS_API_PATH}`, options);
     const data = await response.json();
     if (!response.ok) {
+      console.log(JSON.stringify(data))
       throw new Error(`Error ${response.status}: ${data.Message ?? data.message}`);
     }
     return data;

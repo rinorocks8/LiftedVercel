@@ -5,7 +5,7 @@ import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
 import { Following, FriendRequestKey } from '../../graphql'
-import { convertToDynamoDBItem } from "../../utils/convertToDynamoDBItem";
+import { AttributeValue } from 'dynamodb-data-types';
 
 export const config = {
   runtime: "experimental-edge",
@@ -49,20 +49,20 @@ export default async function handleRequest(req: Request): Promise<Response> {
 					//Delete request
 					Delete: {
 						TableName: process.env['FriendRequest'],
-            Key: convertToDynamoDBItem(friendRequest),
+            Key: AttributeValue.wrap(friendRequest),
 						ConditionExpression: 'attribute_exists(userID) and attribute_exists(requestingUserID)'
 					}
 				}, {
 					//Add requester to user's followers
 					Put: {
 						TableName: process.env['Following'],
-            Item: convertToDynamoDBItem(following1),
+            Item: AttributeValue.wrap(following1),
 					}
 				}, {
 					//Add user to requesters following
 					Put: {
 						TableName: process.env['Following'],
-            Item: convertToDynamoDBItem(following2),
+            Item: AttributeValue.wrap(following2),
 					}
 				}
 			]

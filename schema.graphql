@@ -15,51 +15,44 @@ type Following
   acceptedAt: String!
 }
 
-type Feed @key(pk: "userID", sk: "postID") @gsi(pk: "userID", sk: "createdAt") {
-  userID: ID!
-  postID: ID!
-  postUserID: ID!
-  createdAt: String!
-}
-
-type Post @key(pk: "postID") @gsi(pk: "userID", sk: "createdAt") {
-  postID: ID!
+type Feed
+  @key(pk: "userID", sk: "workoutID")
+  @gsi(pk: "userID", sk: "createdAt") {
   userID: ID!
   workoutID: ID!
-  createdAt: String!
-  likes: Int!
+  workoutUserID: ID!
+  createdAt: Int!
 }
 
-type Like @key(pk: "postID", sk: "userID") {
+type Workout
+  @key(pk: "workoutID")
+  @gsi(pk: "userID", sk: "startTime")
+  @gsi(pk: "userID", sk: "lastUpdated") {
+  workoutID: ID!
   userID: ID!
-  postID: ID!
+  lastUpdated: Int!
+  workout: String!
+  startTime: Int!
+
+  visible: Boolean!
+  likes: Int!
+  caption: String!
+}
+
+type Like @key(pk: "workoutID", sk: "userID") {
+  userID: ID!
+  workoutID: ID!
   createdAt: String!
 }
 
 type Exercise
   @key(pk: "exerciseID")
   @gsi(pk: "userID", sk: "lastUpdated")
-  @gsi(pk: "userID", sk: "variationID")
-  @gsi(pk: "workoutID", sk: "variationID") {
+  @gsi(pk: "userID", sk: "variationID") {
   exerciseID: ID!
   userID: ID!
   lastUpdated: Int!
-
   workoutID: ID!
   variationID: ID!
-  sets: String
-}
-
-type Workout
-  @key(pk: "workoutID")
-  @gsi(pk: "userID", sk: "lastUpdated")
-  @gsi(pk: "userID", sk: "startTime") {
-  workoutID: ID!
-  userID: ID!
-  lastUpdated: Int!
-
-  startTime: String!
-  exerciseGroups: String
-  name: String
-  endTime: String
+  exercise_sets: String
 }
