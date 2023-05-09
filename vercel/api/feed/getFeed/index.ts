@@ -83,16 +83,20 @@ export default async function handleRequest(req: Request): Promise<Response> {
               (obj) => obj.Name === "preferred_username"
             )?.Value,
             createdAt: feed.createdAt,
-            likes: workout.likes,
+            likes: workout.likes ?? 0,
             liked: liked,
-            workout: workout.workout
+            workout: workout.workout,
+            visible: workout.visible ?? undefined,
+            deleted: workout.deleted ?? undefined,
           };
         }
       )
     );
-    
+
+    const visibleWorkouts = workouts.filter(workout => workout.visible !== false && workout.deleted !== true);
+
     return responder.success({
-      workouts: workouts,
+      workouts: visibleWorkouts,
     });
   } catch (error) {
     return responder.error(error);

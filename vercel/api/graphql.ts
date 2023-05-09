@@ -14,8 +14,9 @@ export type Scalars = {
 
 export type Exercise = {
   __typename?: 'Exercise';
+  deleted: Scalars['Boolean'];
   exerciseID: Scalars['ID'];
-  exercise_sets?: Maybe<Scalars['String']>;
+  exercise_sets: Scalars['String'];
   lastUpdated: Scalars['Int'];
   userID: Scalars['ID'];
   variationID: Scalars['ID'];
@@ -119,6 +120,7 @@ export type LikeKey = {
 export type Workout = {
   __typename?: 'Workout';
   caption: Scalars['String'];
+  deleted: Scalars['Boolean'];
   lastUpdated: Scalars['Int'];
   likes: Scalars['Int'];
   startTime: Scalars['Int'];

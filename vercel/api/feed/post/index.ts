@@ -1,7 +1,7 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import * as responder from '../../utils/responder';
-import { Feed } from '../../graphql'
+import { Feed, Workout, WorkoutKey } from '../../graphql'
 
 import { AttributeValue } from 'dynamodb-data-types';
 import { z } from "zod";
@@ -22,7 +22,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
 
     const body = requestBodySchema.parse(await req.json());
     
-    const getFriendsParams = {
+    const queryFriendsParams = {
       TableName: process.env['Following'],
       IndexName: "FollowingByFollowingUserIDAcceptedAt",
       KeyConditionExpression: "followingUserID = :hkey",
@@ -30,12 +30,15 @@ export default async function handleRequest(req: Request): Promise<Response> {
         ":hkey":  username,
       }),
     };
-    const results = await dynamoDBRequest("Query", getFriendsParams);
+
+
+
+    const results = await dynamoDBRequest("Query", queryFriendsParams);
+
     const followerIDs = results.Items.map(item => item.userID.S);
     followerIDs.push(username);
 
-    const transactItems: any = [];
-
+    const writeItems: any[] = [];
     for (const followerID of followerIDs) {
       const post: Feed = {
         userID: followerID,
@@ -44,20 +47,44 @@ export default async function handleRequest(req: Request): Promise<Response> {
         workoutUserID: username
       }
 
-      transactItems.push({
-        Put: {
-          TableName: process.env["Feed"],
+      writeItems.push({
+        PutRequest: {
           Item: AttributeValue.wrap(post)
         },
       });
     }
 
-    const operation_body = {
-      TransactItems: transactItems,
-    };    
+    const batches: any[][] = [];
+    while(writeItems.length) {
+      batches.push(writeItems.splice(0, 25));
+    }
 
-    console.log(transactItems)
-    await dynamoDBRequest("TransactWriteItems", operation_body)
+    let promises = batches.map(batch => {
+      const operation_body = {
+        RequestItems: {
+          [process.env["Feed"] ?? ""]: batch
+        }
+      };
+      return dynamoDBRequest("BatchWriteItem", operation_body);
+    });
+
+    const workoutKey: WorkoutKey = {
+      workoutID: body.workoutID
+    };
+    
+    const params = {
+      TableName: process.env["Workout"],
+      Key: AttributeValue.wrap(workoutKey),
+      UpdateExpression: "SET visible = :visible",
+      ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
+      ExpressionAttributeValues: AttributeValue.wrap({
+        ":visible": true,
+        ":userID": username
+      }),
+    };
+    promises.push(dynamoDBRequest("UpdateItem", params))
+
+    await Promise.all(promises);
     
     return responder.success({
       result: "Posted"

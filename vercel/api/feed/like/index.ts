@@ -39,11 +39,12 @@ export default async function handleRequest(req: Request): Promise<Response> {
           Update: {
             TableName: process.env["Workout"],
             Key: AttributeValue.wrap(workout),
-            UpdateExpression: "SET #likes = #likes + :incr",
+            UpdateExpression: "SET #likes = if_not_exists(#likes, :default) + :incr",
             ConditionExpression: "attribute_exists(userID) and attribute_exists(workoutID)",
             ExpressionAttributeNames: { "#likes": "likes" },
             ExpressionAttributeValues: AttributeValue.wrap({
-              ":incr": 1
+              ":incr": 1,
+              ":default": 0
             }),
           },
         },

@@ -5,6 +5,7 @@ import { ExerciseKey, WorkoutKey } from '../../graphql'
 
 import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
+import parseSchema from "../../utils/parseSchema";
 
 
 export const config = {
@@ -19,7 +20,8 @@ const requestBodySchema = z.object({
     exerciseID: z.string(),
     workoutID: z.string(),
     variationID: z.string(),
-    exercise_sets: z.string()
+    sets: z.string(),
+    deleted: z.boolean().optional()
   })).optional(),
   workouts: z.array(z.object({
     lastUpdated: z.number(),
@@ -27,7 +29,8 @@ const requestBodySchema = z.object({
 
     workoutID: z.string(),
     workout: z.string(),
-    startTime: z.number()
+    startTime: z.number(),
+    deleted: z.boolean().optional()
   })).optional(),
 });
 
@@ -44,8 +47,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const token = req.headers.get("authorization")?.split(" ")[1];
     const decoded = await verifyCognitoToken(token || "");
     const username = decoded["username"];
-    const body = requestBodySchema.parse(await req.json());
-
+    const body = parseSchema(requestBodySchema, await req.json());
     const transactItems: any = [];
 
     for (let _exercise of body.exercises ?? []) {
@@ -56,13 +58,14 @@ export default async function handleRequest(req: Request): Promise<Response> {
         Update: {
           TableName: process.env['Exercise'],
           Key: AttributeValue.wrap(exerciseKey),
-          UpdateExpression: "SET variationID = :new_variationID, exercise_sets = :new_exercise_sets, userID = :new_userID, lastUpdated = :new_lastUpdated, workoutID = :new_workoutID",
+          UpdateExpression: "SET variationID = :new_variationID, exercise_sets = :new_exercise_sets, userID = :new_userID, lastUpdated = :new_lastUpdated, workoutID = :new_workoutID, deleted = :new_deleted",
           ExpressionAttributeValues: AttributeValue.wrap({
             ":new_userID": _exercise.userID,
             ":new_lastUpdated":  _exercise.lastUpdated,
             ":new_workoutID":  _exercise.workoutID,
             ":new_variationID": _exercise.variationID,
-            ":new_exercise_sets": _exercise.exercise_sets,
+            ":new_exercise_sets": _exercise.sets,
+            ":new_deleted": _exercise.deleted
           }),
         },
       })
@@ -76,12 +79,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
         Update: {
           TableName: process.env['Workout'],
           Key: AttributeValue.wrap(workoutKey),
-          UpdateExpression: "SET workout = :new_workout, lastUpdated = :new_lastUpdated, userID = :new_userID, startTime = :new_startTime",
+          UpdateExpression: "SET workout = :new_workout, lastUpdated = :new_lastUpdated, userID = :new_userID, startTime = :new_startTime, deleted = :new_deleted",
           ExpressionAttributeValues: AttributeValue.wrap({
             ":new_userID": _workout.userID,
             ":new_lastUpdated": _workout.lastUpdated,
             ":new_workout": _workout.workout,
-            ":new_startTime": _workout.startTime
+            ":new_startTime": _workout.startTime,
+            ":new_deleted": _workout.deleted
           }),
         },
       })

@@ -7,6 +7,8 @@ export function error(error: Error): Response {
   let statusCode: number = 500;
   let body: string = "";
 
+  console.log("[ERROR]", JSON.stringify(error.message))
+
   switch (error.constructor) {
     case ValidationError:
       statusCode = 400;

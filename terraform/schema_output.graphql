@@ -37,6 +37,7 @@ type Workout
   visible: Boolean!
   likes: Int!
   caption: String!
+  deleted: Boolean!
 }
 
 type Like @key(pk: "workoutID", sk: "userID") {
@@ -54,7 +55,8 @@ type Exercise
   lastUpdated: Int!
   workoutID: ID!
   variationID: ID!
-  exercise_sets: String
+  exercise_sets: String!
+  deleted: Boolean!
 }
 
 type FriendRequestKey {

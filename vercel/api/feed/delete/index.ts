@@ -12,8 +12,6 @@ export const config = {
   runtime: "experimental-edge",
 };
 
-const API_KEY = process.env.API_KEY;
-
 const requestBodySchema = z.object({
   workoutID: z.string().min(1),
 });
@@ -35,7 +33,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
       UpdateExpression: "SET visible = :visible",
       ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
       ExpressionAttributeValues: AttributeValue.wrap({
-        ":visible": 'false',
+        ":visible": false,
         ":userID": username
       }),
     };
