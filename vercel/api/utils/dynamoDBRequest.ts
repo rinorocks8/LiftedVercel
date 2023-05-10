@@ -65,7 +65,7 @@ export async function dynamoDBRequest(operation: string, body: object): Promise<
     const data = await response.json();
     if (!response.ok) {
       console.log(JSON.stringify(data))
-      throw new Error(`Error ${response.status}: ${data.Message ?? data.message}`);
+      throw new Error(`Error ${response.status}: ${data.Message ?? data.message} Body:${JSON.stringify(body)}`);
     }
     return data;
   } catch (error) {

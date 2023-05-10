@@ -59,6 +59,17 @@ type Exercise
   deleted: Boolean!
 }
 
+type User @key(pk: "userID") {
+  userID: ID!
+  name: String!
+  welcome: Boolean!
+  maxTimer: Int!
+  timerAutoStart: Boolean!
+  timerNotifications: Boolean!
+  programs: String!
+  lastUpdated: Int!
+}
+
 type FriendRequestKey {
   userID: ID!
   requestingUserID: ID!
@@ -127,4 +138,9 @@ type ExerciseByUserIDLastUpdatedKey {
 type ExerciseByUserIDVariationIDKey {
   userID: ID!
   variationID: ID!
+}
+
+type UserKey {
+  userID: ID!
+  
 }

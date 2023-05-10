@@ -75,11 +75,12 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const params = {
       TableName: process.env["Workout"],
       Key: AttributeValue.wrap(workoutKey),
-      UpdateExpression: "SET visible = :visible",
+      UpdateExpression: "SET visible = :visible, lastUpdated = :lastUpdated",
       ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
       ExpressionAttributeValues: AttributeValue.wrap({
         ":visible": true,
-        ":userID": username
+        ":userID": username,
+        ":lastUpdated": Date.now()
       }),
     };
     promises.push(dynamoDBRequest("UpdateItem", params))

@@ -74,7 +74,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
             liked = true;
           }
 
-          const workout: Workout = requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: feed.workoutID}
+          const workout: Workout = requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: feed.workoutID, deleted: true}
     
           return {
             id: workout.workoutID,

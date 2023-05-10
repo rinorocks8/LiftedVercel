@@ -178,6 +178,15 @@
         }
       ],
       "range_key": null
+    },
+    "User": {
+      "hash_key": {
+        "name": "userID",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [],
+      "range_key": null
     }
   }
 }

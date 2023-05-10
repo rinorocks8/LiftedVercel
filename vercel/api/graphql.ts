@@ -117,6 +117,23 @@ export type LikeKey = {
   workoutID: Scalars['ID'];
 };
 
+export type User = {
+  __typename?: 'User';
+  lastUpdated: Scalars['Int'];
+  maxTimer: Scalars['Int'];
+  name: Scalars['String'];
+  programs: Scalars['String'];
+  timerAutoStart: Scalars['Boolean'];
+  timerNotifications: Scalars['Boolean'];
+  userID: Scalars['ID'];
+  welcome: Scalars['Boolean'];
+};
+
+export type UserKey = {
+  __typename?: 'UserKey';
+  userID: Scalars['ID'];
+};
+
 export type Workout = {
   __typename?: 'Workout';
   caption: Scalars['String'];

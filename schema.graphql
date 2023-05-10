@@ -58,3 +58,14 @@ type Exercise
   exercise_sets: String!
   deleted: Boolean!
 }
+
+type User @key(pk: "userID") {
+  userID: ID!
+  name: String!
+  welcome: Boolean!
+  maxTimer: Int!
+  timerAutoStart: Boolean!
+  timerNotifications: Boolean!
+  programs: String!
+  lastUpdated: Int!
+}

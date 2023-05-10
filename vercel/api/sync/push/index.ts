@@ -1,7 +1,7 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import * as responder from '../../utils/responder';
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
-import { ExerciseKey, WorkoutKey } from '../../graphql'
+import { ExerciseKey, User, WorkoutKey } from '../../graphql'
 
 import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
@@ -32,6 +32,15 @@ const requestBodySchema = z.object({
     startTime: z.number(),
     deleted: z.boolean().optional()
   })).optional(),
+  user: z.object({
+    userID: z.string(),
+    name: z.string(),
+    welcome: z.boolean(),
+    maxTimer: z.number(),
+    timerAutoStart: z.boolean(),
+    timerNotifications: z.boolean(),
+    programs: z.string(),
+  }).optional(),
 });
 
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -87,6 +96,19 @@ export default async function handleRequest(req: Request): Promise<Response> {
             ":new_startTime": _workout.startTime,
             ":new_deleted": _workout.deleted
           }),
+        },
+      })
+    }
+
+    // for (let _workout of body.workouts ?? []) {
+    if (body.user) {
+      let user: User = {
+        ...body.user
+      }
+      transactItems.push({
+        Put: {
+          TableName: process.env['User'],
+          Item: AttributeValue.wrap(user),
         },
       })
     }

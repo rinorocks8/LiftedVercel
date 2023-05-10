@@ -6,6 +6,8 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { AttributeValue } from 'dynamodb-data-types';
 import parseSchema from "../../utils/parseSchema";
 
+import { User, UserKey } from '../../graphql'
+
 export const config = {
   runtime: "experimental-edge",
 };
@@ -30,7 +32,6 @@ async function fetchAllData(queryParamsDynamo: any): Promise<any[]> {
   return updates;
 }
 
-
 export default async function handleRequest(req: Request): Promise<Response> {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -38,6 +39,15 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
     const body = parseSchema(requestBodySchema, await req.json());
 
+    const userKey: UserKey = {
+      userID: username
+    }
+
+    const getUser = {
+      TableName: process.env['User'],
+      Key: AttributeValue.wrap(userKey)
+    };
+    
     const exerciseQueryParams = {
       TableName: process.env['Exercise'],
       IndexName: "ExerciseByUserIDLastUpdated",
@@ -55,10 +65,12 @@ export default async function handleRequest(req: Request): Promise<Response> {
         ":pk": username,
         ":sk": body.lastUpdated,
       }),
-      ProjectionExpression: "workoutID, userID, lastUpdated, workout, startTime, deleted"
+      ProjectionExpression: "workoutID, userID, lastUpdated, workout, startTime, deleted, visible"
     };
 
-    let [exerciseUpdates, workoutUpdates] = await Promise.all([fetchAllData(exerciseQueryParams), fetchAllData(workoutQueryParams)]);
+    let [exerciseUpdates, workoutUpdates, _userUpdate] = await Promise.all([fetchAllData(exerciseQueryParams), fetchAllData(workoutQueryParams), dynamoDBRequest("GetItem", getUser)]);
+
+    const userUpdate: User = AttributeValue.unwrap(_userUpdate.Item)
 
     return responder.success({
       exercises: exerciseUpdates.map(exercise => ({
@@ -66,7 +78,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
         exercise_sets: undefined,
         sets: exercise.exercise_sets
       })),
-      workouts: workoutUpdates
+      workouts: workoutUpdates,
+      user: userUpdate
     });
 
   } catch (error) {
