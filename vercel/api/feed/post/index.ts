@@ -12,6 +12,7 @@ export const config = {
 
 const requestBodySchema = z.object({
   workoutID: z.string().min(1),
+  caption: z.string().optional(),
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -30,8 +31,6 @@ export default async function handleRequest(req: Request): Promise<Response> {
         ":hkey":  username,
       }),
     };
-
-
 
     const results = await dynamoDBRequest("Query", queryFriendsParams);
 
@@ -75,12 +74,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const params = {
       TableName: process.env["Workout"],
       Key: AttributeValue.wrap(workoutKey),
-      UpdateExpression: "SET visible = :visible, lastUpdated = :lastUpdated",
+      UpdateExpression: "SET visible = :visible, lastUpdated = :lastUpdated, caption = :caption",
       ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
       ExpressionAttributeValues: AttributeValue.wrap({
         ":visible": true,
         ":userID": username,
-        ":lastUpdated": Date.now()
+        ":lastUpdated": Date.now(),
+        ":caption": body.caption ?? ""
       }),
     };
     promises.push(dynamoDBRequest("UpdateItem", params))

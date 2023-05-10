@@ -85,6 +85,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
             createdAt: feed.createdAt,
             likes: workout.likes ?? 0,
             liked: liked,
+            caption: workout.caption ?? "",
             workout: workout.workout,
             visible: workout.visible ?? undefined,
             deleted: workout.deleted ?? undefined,
