@@ -13,6 +13,7 @@ export const config = {
 const requestBodySchema = z.object({
   workoutID: z.string().min(1),
   caption: z.string().optional(),
+  postLocation: z.string().optional(),
 });
 
 export default async function handleRequest(req: Request): Promise<Response> {
@@ -74,13 +75,14 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const params = {
       TableName: process.env["Workout"],
       Key: AttributeValue.wrap(workoutKey),
-      UpdateExpression: "SET visible = :visible, lastUpdated = :lastUpdated, caption = :caption",
+      UpdateExpression: "SET visible = :visible, lastUpdated = :lastUpdated, caption = :caption, postLocation = :postLocation",
       ConditionExpression: "attribute_exists(workoutID) AND userID = :userID",
       ExpressionAttributeValues: AttributeValue.wrap({
         ":visible": true,
         ":userID": username,
         ":lastUpdated": Date.now(),
-        ":caption": body.caption ?? ""
+        ":caption": body.caption ?? "",
+        ":postLocation": body.postLocation ?? "",
       }),
     };
     promises.push(dynamoDBRequest("UpdateItem", params))

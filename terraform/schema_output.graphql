@@ -37,6 +37,7 @@ type Workout
   visible: Boolean!
   likes: Int!
   caption: String!
+  postLocation: String!
   deleted: Boolean!
 }
 

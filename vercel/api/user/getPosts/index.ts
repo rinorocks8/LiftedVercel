@@ -81,6 +81,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
             createdAt: workout.startTime,
             likes: workout.likes ?? 0,
             liked: liked,
+            caption: workout.caption ?? "",
+            postLocation: workout.postLocation ?? "",
             workout: workout.workout,
             visible: workout.visible ?? undefined,
             deleted: workout.deleted ?? undefined,

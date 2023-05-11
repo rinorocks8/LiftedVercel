@@ -140,6 +140,7 @@ export type Workout = {
   deleted: Scalars['Boolean'];
   lastUpdated: Scalars['Int'];
   likes: Scalars['Int'];
+  postLocation: Scalars['String'];
   startTime: Scalars['Int'];
   userID: Scalars['ID'];
   visible: Scalars['Boolean'];
