@@ -3,7 +3,7 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Feed, LikeKey, Workout, WorkoutKey } from '../../graphql'
+import { Feed, FollowingKey, LikeKey, Workout, WorkoutKey } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
 import { AttributeValue } from 'dynamodb-data-types';
 
@@ -44,6 +44,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
           const workoutKey: WorkoutKey = {
             workoutID: feed.workoutID,
           }
+          const followingKey: FollowingKey = {
+            userID: username,
+            followingUserID: feed.workoutUserID,
+          };
 
           //Parallelize this?
           const getParams = {
@@ -51,6 +55,11 @@ export default async function handleRequest(req: Request): Promise<Response> {
               [process.env['Like'] || ""]: {
                 Keys: [
                   AttributeValue.wrap(likeKey)
+                ]
+              },
+              [process.env['Following'] || ""]: {
+                Keys: [
+                  AttributeValue.wrap(followingKey)
                 ]
               },
               [process.env['Workout'] || ""]: {
@@ -69,10 +78,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
               UserPoolId: process.env.userPoolID
           });
 
-          let liked: boolean = false;
-          if (requests.Responses[process.env['Like'] || ""].length > 0) {
-            liked = true;
-          }
+          const liked: boolean = requests.Responses[process.env['Like'] || ""].length > 0;
+          const following: boolean = requests.Responses[process.env['Following'] || ""].length > 0 || username === feed.workoutUserID;
 
           const workout: Workout = requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: feed.workoutID, deleted: true}
     
@@ -90,12 +97,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
             workout: workout.workout,
             visible: workout.visible ?? undefined,
             deleted: workout.deleted ?? undefined,
+            following: following
           };
         }
       )
     );
 
-    const visibleWorkouts = workouts.filter(workout => workout.visible !== false && workout.deleted !== true);
+    const visibleWorkouts = workouts.filter(workout => workout.visible !== false && workout.deleted !== true && workout.following !== false);
 
     return responder.success({
       workouts: visibleWorkouts,

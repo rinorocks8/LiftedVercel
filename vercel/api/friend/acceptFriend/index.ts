@@ -7,6 +7,8 @@ import * as responder from '../../utils/responder';
 import { Following, FriendRequestKey } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
 
+const API_KEY = process.env.API_KEY;
+
 export const config = {
   runtime: "experimental-edge",
 };
@@ -20,6 +22,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const token = req.headers.get("authorization")?.split(" ")[1];
     const decoded = await verifyCognitoToken(token || "");
     const username = decoded["username"];
+    const url = req.headers.get("x-forwarded-proto") + "://" + req.headers.get("host");
 
     const body = requestBodySchema.parse(await req.json());
 
@@ -73,6 +76,28 @@ export default async function handleRequest(req: Request): Promise<Response> {
         throw new BodyError("Follow Request Does Not Exist");
       throw error;
     })
+
+    // Logic can be handled after response
+    fetch(`${url}/api/friend/addFriendPosts`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': API_KEY || ""
+      },
+      body: JSON.stringify({
+        userID: username,
+        requesterID: body.requesterID
+      })
+    });
+    fetch(`${url}/api/friend/addFriendPosts`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': API_KEY || ""
+      },
+      body: JSON.stringify({
+        userID: body.requesterID,
+        requesterID: username
+      })
+    });
     
     return responder.success({
       result: "Friend Request Accepted",

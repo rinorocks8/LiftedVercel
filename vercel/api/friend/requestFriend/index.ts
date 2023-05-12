@@ -5,6 +5,7 @@ import * as responder from '../../utils/responder';
 
 import { FriendRequest } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
+import { BodyError } from "../../utils/errors";
 
 export const config = {
   runtime: "experimental-edge",
@@ -21,6 +22,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
 
     const body = requestBodySchema.parse(await req.json());
+
+    if (username === body.requestingID) {
+      throw new BodyError("Cannot Friend Request Yourself.")
+    }
 
     const requested_at = new Date().toISOString();
 

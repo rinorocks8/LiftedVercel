@@ -1,11 +1,12 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import * as responder from '../../utils/responder';
-import { LikeKey, Workout } from '../../graphql'
+import { FollowingKey, LikeKey, Workout } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
 
 import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
+import { AuthenticationError } from "../../utils/errors";
 
 export const config = {
   runtime: "experimental-edge",
@@ -22,6 +23,19 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
 
     const body = requestBodySchema.parse(await req.json());
+
+    const followingKey: FollowingKey = {
+      userID: username,
+      followingUserID: body.userID,
+    };
+    const getFollowing = {
+      TableName: process.env['Following'],
+      Key: AttributeValue.wrap(followingKey)
+    };
+    const following = await dynamoDBRequest("GetItem", getFollowing)
+    if (following.Item === undefined) {
+      throw new AuthenticationError("Not Following User")
+    }
 
     const getFeedParams = {
       TableName: process.env['Workout'],
@@ -48,7 +62,6 @@ export default async function handleRequest(req: Request): Promise<Response> {
             workoutID: workout.workoutID,
             userID: username,
           }
-          //Parallelize this?
           const getParams = {
             RequestItems: {
               [process.env['Like'] || ""]: {
@@ -56,16 +69,18 @@ export default async function handleRequest(req: Request): Promise<Response> {
                   AttributeValue.wrap(likeKey)
                 ]
               },
-            },
+            }, 
           };
       
-          //TODO Parallelize this?
-          let requests = await dynamoDBRequest("BatchGetItem", getParams);
-          const user = await cognitoRequest(	
-            "AdminGetUser", {
-              Username: workout.userID,
-              UserPoolId: process.env.userPoolID
-          });
+          const [requests, user] = await Promise.all([
+            dynamoDBRequest("BatchGetItem", getParams),
+            cognitoRequest(
+              "AdminGetUser", {
+                Username: workout.userID,
+                UserPoolId: process.env.userPoolID
+              }
+            )
+          ])
 
           let liked: boolean = false;
           if (requests.Responses[process.env['Like'] || ""].length > 0) {
