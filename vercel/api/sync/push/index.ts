@@ -21,6 +21,10 @@ const requestBodySchema = z.object({
     workoutID: z.string(),
     variationID: z.string(),
     sets: z.string(),
+    total_sets: z.number().optional(),
+    total_weight: z.number().optional(),
+    maxEq: z.number().optional(),
+
     deleted: z.boolean().optional()
   })).optional(),
   workouts: z.array(z.object({
@@ -30,6 +34,10 @@ const requestBodySchema = z.object({
     workoutID: z.string(),
     workout: z.string(),
     startTime: z.number(),
+    total_duration: z.number().optional(),
+    total_sets: z.number().optional(),
+    total_weight: z.number().optional(),
+
     deleted: z.boolean().optional()
   })).optional(),
   user: z.object({
@@ -40,6 +48,11 @@ const requestBodySchema = z.object({
     timerAutoStart: z.boolean(),
     timerNotifications: z.boolean(),
     programs: z.string(),
+    total_exercises: z.number(),
+    total_workouts: z.number(),
+    total_weight: z.number(),
+    total_sets: z.number(),
+    total_duration: z.number(),
   }).optional(),
 });
 
@@ -63,18 +76,22 @@ export default async function handleRequest(req: Request): Promise<Response> {
       let exerciseKey: ExerciseKey = {
         exerciseID: _exercise.exerciseID
       }
+  
       transactItems.push({
         Update: {
           TableName: process.env['Exercise'],
           Key: AttributeValue.wrap(exerciseKey),
-          UpdateExpression: "SET variationID = :new_variationID, exercise_sets = :new_exercise_sets, userID = :new_userID, lastUpdated = :new_lastUpdated, workoutID = :new_workoutID, deleted = :new_deleted",
+          UpdateExpression: "SET variationID = :new_variationID, exercise_sets = :new_exercise_sets, userID = :new_userID, lastUpdated = :new_lastUpdated, workoutID = :new_workoutID, deleted = :new_deleted, total_sets = :total_sets, total_weight = :total_weight, maxEq = :maxEq",
           ExpressionAttributeValues: AttributeValue.wrap({
             ":new_userID": _exercise.userID,
             ":new_lastUpdated":  _exercise.lastUpdated,
             ":new_workoutID":  _exercise.workoutID,
             ":new_variationID": _exercise.variationID,
             ":new_exercise_sets": _exercise.sets,
-            ":new_deleted": _exercise.deleted
+            ":new_deleted": _exercise.deleted,
+            ":total_sets": _exercise.total_sets ?? 0,
+            ":total_weight": _exercise.total_weight ?? 0,
+            ":maxEq": _exercise.maxEq ?? 0
           }),
         },
       })
@@ -84,17 +101,21 @@ export default async function handleRequest(req: Request): Promise<Response> {
       let workoutKey: WorkoutKey = {
         workoutID: _workout.workoutID
       }
+
       transactItems.push({
         Update: {
           TableName: process.env['Workout'],
           Key: AttributeValue.wrap(workoutKey),
-          UpdateExpression: "SET workout = :new_workout, lastUpdated = :new_lastUpdated, userID = :new_userID, startTime = :new_startTime, deleted = :new_deleted",
+          UpdateExpression: "SET workout = :new_workout, lastUpdated = :new_lastUpdated, userID = :new_userID, startTime = :new_startTime, deleted = :new_deleted, total_duration = :total_duration, total_sets = :total_sets, total_weight = :total_weight",
           ExpressionAttributeValues: AttributeValue.wrap({
             ":new_userID": _workout.userID,
             ":new_lastUpdated": _workout.lastUpdated,
             ":new_workout": _workout.workout,
             ":new_startTime": _workout.startTime,
-            ":new_deleted": _workout.deleted
+            ":new_deleted": _workout.deleted,
+            ":total_duration": _workout.total_duration ?? 0,
+            ":total_sets": _workout.total_sets ?? 0,
+            ":total_weight": _workout.total_weight ?? 0,
           }),
         },
       })

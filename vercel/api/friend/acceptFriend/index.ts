@@ -4,7 +4,7 @@ import { z } from "zod";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Following, FriendRequestKey } from '../../graphql'
+import { Following, FriendRequestKey, UserKey } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
 
 const API_KEY = process.env.API_KEY;
@@ -45,6 +45,14 @@ export default async function handleRequest(req: Request): Promise<Response> {
       acceptedAt: accepted_at,
     };
 
+    const userKey1: UserKey = {
+      userID: body.requesterID,
+    };
+
+    const userKey2: UserKey = {
+      userID: username,
+    };
+
     const operation = "TransactWriteItems";
     const operation_body = {
       TransactItems: [
@@ -67,7 +75,27 @@ export default async function handleRequest(req: Request): Promise<Response> {
 						TableName: process.env['Following'],
             Item: AttributeValue.wrap(following2),
 					}
-				}
+        }, {
+          Update: {
+            TableName: process.env["User"],
+            Key: AttributeValue.wrap(userKey1),
+            UpdateExpression: "SET followers = if_not_exists(followers, :default) + :incr, following = if_not_exists(following, :default) + :incr",
+            ExpressionAttributeValues: AttributeValue.wrap({
+              ":incr": 1,
+              ":default": 0
+            }),
+          }
+        }, {
+          Update: {
+            TableName: process.env["User"],
+            Key: AttributeValue.wrap(userKey2),
+            UpdateExpression: "SET followers = if_not_exists(followers, :default) + :incr, following = if_not_exists(following, :default) + :incr",
+            ExpressionAttributeValues: AttributeValue.wrap({
+              ":incr": 1,
+              ":default": 0
+            }),
+          }
+        }
 			]
     };
 

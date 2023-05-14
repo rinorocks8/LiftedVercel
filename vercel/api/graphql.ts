@@ -18,6 +18,9 @@ export type Exercise = {
   exerciseID: Scalars['ID'];
   exercise_sets: Scalars['String'];
   lastUpdated: Scalars['Int'];
+  maxEq: Scalars['Int'];
+  total_sets: Scalars['Int'];
+  total_weight: Scalars['Int'];
   userID: Scalars['ID'];
   variationID: Scalars['ID'];
   workoutID: Scalars['ID'];
@@ -119,6 +122,7 @@ export type LikeKey = {
 
 export type User = {
   __typename?: 'User';
+  bio: Scalars['String'];
   lastUpdated: Scalars['Int'];
   maxTimer: Scalars['Int'];
   name: Scalars['String'];
@@ -142,6 +146,9 @@ export type Workout = {
   likes: Scalars['Int'];
   postLocation: Scalars['String'];
   startTime: Scalars['Int'];
+  total_duration: Scalars['Int'];
+  total_sets: Scalars['Int'];
+  total_weight: Scalars['Int'];
   userID: Scalars['ID'];
   visible: Scalars['Boolean'];
   workout: Scalars['String'];

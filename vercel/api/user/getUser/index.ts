@@ -2,7 +2,7 @@ import { ParameterError } from "../../utils/errors";
 import * as responder from "../../utils/responder";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { cognitoRequest } from "../../utils/cognitoRequest";
-import { FollowingKey, FriendRequestKey } from "../../graphql";
+import { FollowingKey, FriendRequestKey, UserKey } from "../../graphql";
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 
 import { z } from "zod";
@@ -43,6 +43,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
       requestingUserID: username,
     };
 
+    const userKey: UserKey = {
+      userID: body.username,
+    };
+
     const operation = "BatchGetItem";
     const operation_body = {
       RequestItems: {
@@ -51,13 +55,16 @@ export default async function handleRequest(req: Request): Promise<Response> {
         },
         [process.env['FriendRequest'] || ""]: {
           Keys: [AttributeValue.wrap(friendRequestKey)]
+        },
+        [process.env['User'] || ""]: {
+          Keys: [AttributeValue.wrap(userKey)]
         }
       }
     };
 
+    let authResult = await dynamoDBRequest(operation, operation_body);
     let friendship = "not_following";
     if (username !== body.username) {
-      let authResult = await dynamoDBRequest(operation, operation_body);
       if (!isEmpty(authResult.Responses[process.env['Following'] || ""])) {
         friendship = "following";
       } else if (!isEmpty(authResult.Responses[process.env['FriendRequest'] || ""])) {
@@ -67,6 +74,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
       friendship = "self";
     }
 
+    const userDB = AttributeValue.unwrap(authResult.Responses[process.env['User'] || ""][0])
+
     return responder.success({
       user: {
         userID: user.Username,
@@ -74,6 +83,14 @@ export default async function handleRequest(req: Request): Promise<Response> {
           (obj) => obj.Name === "preferred_username"
         )?.Value,
         friendship: friendship,
+        followers: userDB.followers ?? 0,
+        following: userDB.following ?? 0,
+        name: userDB.name ?? "",
+        total_exercises: userDB.total_exercises ?? 0,
+        total_workouts: userDB.total_workouts ?? 0,
+        total_weight: userDB.total_weight ?? 0,
+        total_sets: userDB.total_sets ?? 0,
+        total_duration: userDB.total_duration ?? 0,
       },
     });
   } catch (error) {

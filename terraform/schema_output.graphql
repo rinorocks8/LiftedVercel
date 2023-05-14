@@ -34,6 +34,10 @@ type Workout
   workout: String!
   startTime: Int!
 
+  total_duration: Int!
+  total_sets: Int!
+  total_weight: Int!
+
   visible: Boolean!
   likes: Int!
   caption: String!
@@ -58,11 +62,16 @@ type Exercise
   variationID: ID!
   exercise_sets: String!
   deleted: Boolean!
+
+  total_sets: Int!
+  total_weight: Int!
+  maxEq: Int!
 }
 
 type User @key(pk: "userID") {
   userID: ID!
   name: String!
+  bio: String!
   welcome: Boolean!
   maxTimer: Int!
   timerAutoStart: Boolean!

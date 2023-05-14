@@ -65,7 +65,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
         ":pk": username,
         ":sk": body.lastUpdated,
       }),
-      ProjectionExpression: "workoutID, userID, lastUpdated, workout, startTime, deleted, visible"
+      ProjectionExpression: "workoutID, userID, lastUpdated, workout, startTime, deleted, visible, total_duration, total_sets, total_weight"
     };
 
     let [exerciseUpdates, workoutUpdates, _userUpdate] = await Promise.all([fetchAllData(exerciseQueryParams), fetchAllData(workoutQueryParams), dynamoDBRequest("GetItem", getUser)]);

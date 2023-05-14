@@ -24,17 +24,19 @@ export default async function handleRequest(req: Request): Promise<Response> {
 
     const body = requestBodySchema.parse(await req.json());
 
-    const followingKey: FollowingKey = {
-      userID: username,
-      followingUserID: body.userID,
-    };
-    const getFollowing = {
-      TableName: process.env['Following'],
-      Key: AttributeValue.wrap(followingKey)
-    };
-    const following = await dynamoDBRequest("GetItem", getFollowing)
-    if (following.Item === undefined) {
-      throw new AuthenticationError("Not Following User")
+    if (username !== body.userID) {
+      const followingKey: FollowingKey = {
+        userID: username,
+        followingUserID: body.userID,
+      };
+      const getFollowing = {
+        TableName: process.env['Following'],
+        Key: AttributeValue.wrap(followingKey)
+      };
+      const following = await dynamoDBRequest("GetItem", getFollowing)
+      if (following.Item === undefined) {
+        throw new AuthenticationError("Not Following User")
+      }
     }
 
     const getFeedParams = {
