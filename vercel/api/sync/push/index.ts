@@ -1,7 +1,7 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import * as responder from '../../utils/responder';
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
-import { ExerciseKey, User, WorkoutKey } from '../../graphql'
+import { ExerciseKey, UserKey, WorkoutKey } from '../../graphql'
 
 import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
@@ -123,13 +123,30 @@ export default async function handleRequest(req: Request): Promise<Response> {
 
     // for (let _workout of body.workouts ?? []) {
     if (body.user) {
-      let user: User = {
-        ...body.user
+      let userKey: UserKey = {
+        userID: username
       }
       transactItems.push({
-        Put: {
+        Update: {
           TableName: process.env['User'],
-          Item: AttributeValue.wrap(user),
+          Key: AttributeValue.wrap(userKey),  // you need to provide the userKey here
+          UpdateExpression: "SET #name = :new_name, welcome = :new_welcome, maxTimer = :new_maxTimer, timerAutoStart = :new_timerAutoStart, timerNotifications = :new_timerNotifications, programs = :new_programs, total_exercises = :new_total_exercises, total_workouts = :new_total_workouts, total_weight = :new_total_weight, total_sets = :new_total_sets, total_duration = :new_total_duration",
+          ExpressionAttributeNames: {
+              "#name": "name"
+          },
+          ExpressionAttributeValues: AttributeValue.wrap({
+              ":new_name": body.user.name,
+              ":new_welcome": body.user.welcome,
+              ":new_maxTimer": body.user.maxTimer,
+              ":new_timerAutoStart": body.user.timerAutoStart,
+              ":new_timerNotifications": body.user.timerNotifications,
+              ":new_programs": body.user.programs,
+              ":new_total_exercises": body.user.total_exercises ?? 0,
+              ":new_total_workouts": body.user.total_workouts ?? 0,
+              ":new_total_weight": body.user.total_weight ?? 0,
+              ":new_total_sets": body.user.total_sets ?? 0,
+              ":new_total_duration": body.user.total_duration ?? 0
+          }),
         },
       })
     }
