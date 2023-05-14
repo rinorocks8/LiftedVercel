@@ -86,6 +86,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
         followers: userDB.followers ?? 0,
         following: userDB.following ?? 0,
         name: userDB.name ?? "",
+        bio: userDB.bio ?? "",
         total_exercises: userDB.total_exercises ?? 0,
         total_workouts: userDB.total_workouts ?? 0,
         total_weight: userDB.total_weight ?? 0,
