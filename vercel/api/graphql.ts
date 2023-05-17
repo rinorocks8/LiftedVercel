@@ -129,6 +129,11 @@ export type User = {
   programs: Scalars['String'];
   timerAutoStart: Scalars['Boolean'];
   timerNotifications: Scalars['Boolean'];
+  total_duration: Scalars['Int'];
+  total_exercises: Scalars['Int'];
+  total_sets: Scalars['Int'];
+  total_weight: Scalars['Int'];
+  total_workouts: Scalars['Int'];
   userID: Scalars['ID'];
   welcome: Scalars['Boolean'];
 };

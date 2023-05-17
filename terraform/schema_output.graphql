@@ -70,6 +70,7 @@ type Exercise
 
 type User @key(pk: "userID") {
   userID: ID!
+  lastUpdated: Int!
   name: String!
   bio: String!
   welcome: Boolean!
@@ -78,6 +79,12 @@ type User @key(pk: "userID") {
   timerNotifications: Boolean!
   programs: String!
   lastUpdated: Int!
+
+  total_exercises: Int!
+  total_workouts: Int!
+  total_weight: Int!
+  total_sets: Int!
+  total_duration: Int!
 }
 
 type FriendRequestKey {

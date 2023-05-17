@@ -70,6 +70,7 @@ type Exercise
 
 type User @key(pk: "userID") {
   userID: ID!
+  lastUpdated: Int!
   name: String!
   bio: String!
   welcome: Boolean!

@@ -92,6 +92,11 @@ export default async function handleRequest(req: Request): Promise<Response> {
         total_weight: userDB.total_weight ?? 0,
         total_sets: userDB.total_sets ?? 0,
         total_duration: userDB.total_duration ?? 0,
+        longestStreak: userDB.longestStreak ?? 0,
+        currentStreak: userDB.currentStreak ?? 0,
+        workoutPercentage: userDB.workoutPercentage ?? 0,
+        lastUpdated: userDB.lastUpdated ?? 0,
+        total_days: userDB.total_days ?? 0,
       },
     });
   } catch (error) {

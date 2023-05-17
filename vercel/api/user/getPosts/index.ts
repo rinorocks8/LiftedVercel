@@ -108,7 +108,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
       )
     );
 
-    const visibleWorkouts = workouts.filter(workout => workout.visible !== false && workout.deleted !== true);
+    const visibleWorkouts = workouts.filter(workout => workout.visible === true && workout.deleted !== true);
 
     return responder.success({
       workouts: visibleWorkouts,

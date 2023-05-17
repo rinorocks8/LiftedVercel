@@ -103,7 +103,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
       )
     );
 
-    const visibleWorkouts = workouts.filter(workout => workout.visible !== false && workout.deleted !== true && workout.following !== false);
+    const visibleWorkouts = workouts.filter(workout => workout.visible === true && workout.deleted !== true && workout.following !== false);
 
     return responder.success({
       workouts: visibleWorkouts,
