@@ -58,6 +58,7 @@ const requestBodySchema = z.object({
     currentStreak: z.number(),
     workoutPercentage: z.number(),
     total_days: z.number(),
+    lastUpdated: z.number(),
   }).optional(),
 });
 
@@ -140,8 +141,8 @@ export default async function handleRequest(req: Request): Promise<Response> {
               "#name": "name"
           },
           ExpressionAttributeValues: AttributeValue.wrap({
-            ":new_name": body.user.name,
-            ":lastUpdated": Date.now(),
+            ":new_name": body.user.name ?? "",
+            ":lastUpdated": body.user.lastUpdated ?? 0,
             ":bio": body.user.bio ?? "",
             ":new_welcome": body.user.welcome,
             ":new_maxTimer": body.user.maxTimer,
