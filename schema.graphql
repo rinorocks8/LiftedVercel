@@ -85,4 +85,7 @@ type User @key(pk: "userID") {
   total_weight: Int!
   total_sets: Int!
   total_duration: Int!
+  profile_small: String!
+  profile_medium: String!
+  profile_large: String!
 }

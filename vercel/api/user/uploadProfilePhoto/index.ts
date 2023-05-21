@@ -1,16 +1,23 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { S3, Rekognition } from 'aws-sdk';
+import { S3, Rekognition, DynamoDB } from 'aws-sdk';
 import sharp from 'sharp';
 import formidable from "formidable";
 import * as fs from "fs"
 import { verifyCognitoToken } from '../../utils/verifyCognitoToken';
+import { UserKey } from '../../graphql';
+import { AttributeValue } from 'dynamodb-data-types';
+import { UpdateItemInput } from 'aws-sdk/clients/dynamodb';
 
 const s3 = new S3();
 const rekognition = new Rekognition();
+const dynamodb = new DynamoDB();
 
 // Resolves crypto for non edge function
 const crypto = require('crypto').webcrypto;
 global.crypto = crypto;
+
+const fetch = require('node-fetch');
+global.fetch = fetch;
 
 export const config = {
   api: {
@@ -63,7 +70,22 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         uploadImageToS3(username, thumbnail.buffer, thumbnail.name, imageType)
       );
 
-      await Promise.all(uploadPromises);
+      const versionIds = await Promise.all(uploadPromises);
+
+      const userKey: UserKey = {
+        userID: username
+      };
+      const updateUser: UpdateItemInput = {
+        TableName: process.env['User'] || "",
+        Key: AttributeValue.wrap(userKey),
+        UpdateExpression: "SET profile_small = :profile_small, profile_medium = :profile_medium, profile_large = :profile_large",
+        ExpressionAttributeValues: AttributeValue.wrap({
+          ":profile_small": versionIds[0],
+          ":profile_medium":  versionIds[1],
+          ":profile_large":  versionIds[2],
+        }),
+      };
+      await dynamodb.updateItem(updateUser).promise()
 
       return res.status(200).send("Success");
     })
@@ -105,7 +127,7 @@ async function generateThumbnails(imageBuffer: Buffer) {
 async function uploadImageToS3(username: string, imageBuffer: Buffer, size: string, imageType: string) {
   const key = `${username}/${username}_${size}.jpg`;
 
-  await s3
+  const response = await s3
     .upload({
       Bucket: 'liftedprofiles',
       Key: key,
@@ -117,5 +139,5 @@ async function uploadImageToS3(username: string, imageBuffer: Buffer, size: stri
     })
     .promise();
 
-  return key;
+  return (response as any).VersionId;
 }

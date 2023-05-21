@@ -126,6 +126,9 @@ export type User = {
   lastUpdated: Scalars['Int'];
   maxTimer: Scalars['Int'];
   name: Scalars['String'];
+  profile_large: Scalars['String'];
+  profile_medium: Scalars['String'];
+  profile_small: Scalars['String'];
   programs: Scalars['String'];
   timerAutoStart: Scalars['Boolean'];
   timerNotifications: Scalars['Boolean'];

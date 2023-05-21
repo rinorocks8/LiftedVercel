@@ -98,6 +98,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
         workoutPercentage: userDB.workoutPercentage ?? 0,
         lastUpdated: userDB.lastUpdated ?? 0,
         total_days: userDB.total_days ?? 0,
+        profile_small: userDB.profile_small ?? "",
+        profile_medium: userDB.profile_medium ?? "",
+        profile_large: userDB.profile_large ?? "",
       }
     }));
 

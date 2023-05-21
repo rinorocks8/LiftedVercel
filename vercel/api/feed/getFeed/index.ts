@@ -3,7 +3,7 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { BodyError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Feed, FollowingKey, LikeKey, Workout, WorkoutKey } from '../../graphql'
+import { Feed, FollowingKey, LikeKey, User, UserKey, Workout, WorkoutKey } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
 import { AttributeValue } from 'dynamodb-data-types';
 
@@ -48,6 +48,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
             userID: username,
             followingUserID: feed.workoutUserID,
           };
+          const userKey: UserKey = {
+            userID: feed.workoutUserID,
+          }
 
           //Parallelize this?
           const getParams = {
@@ -67,6 +70,11 @@ export default async function handleRequest(req: Request): Promise<Response> {
                   AttributeValue.wrap(workoutKey),
                 ]
               },
+              [process.env['User'] || ""]: {
+                Keys: [
+                  AttributeValue.wrap(userKey),
+                ]
+              },
             },
           };
       
@@ -82,6 +90,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
           const following: boolean = requests.Responses[process.env['Following'] || ""].length > 0 || username === feed.workoutUserID;
 
           const workout: Workout = requests.Responses[process.env['Workout'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['Workout'] || ""][0]) : {workoutID: feed.workoutID, deleted: true}
+          const userDB: User = requests.Responses[process.env['User'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['User'] || ""][0]) : {}
     
           return {
             id: workout.workoutID,
@@ -97,7 +106,10 @@ export default async function handleRequest(req: Request): Promise<Response> {
             workout: workout.workout,
             visible: workout.visible ?? undefined,
             deleted: workout.deleted ?? undefined,
-            following: following
+            following: following,
+            profile_small: userDB?.profile_small ?? "",
+            profile_medium: userDB?.profile_medium ?? "",
+            profile_large: userDB?.profile_large ?? "",
           };
         }
       )

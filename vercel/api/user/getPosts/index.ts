@@ -1,7 +1,7 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import * as responder from '../../utils/responder';
-import { FollowingKey, LikeKey, Workout } from '../../graphql'
+import { FollowingKey, LikeKey, UserKey, Workout, User } from '../../graphql'
 import { cognitoRequest } from "../../utils/cognitoRequest";
 
 import { z } from "zod";
@@ -64,11 +64,19 @@ export default async function handleRequest(req: Request): Promise<Response> {
             workoutID: workout.workoutID,
             userID: username,
           }
+          const userKey: UserKey = {
+            userID: body.userID,
+          }
           const getParams = {
             RequestItems: {
               [process.env['Like'] || ""]: {
                 Keys: [
                   AttributeValue.wrap(likeKey)
+                ]
+              },
+              [process.env['User'] || ""]: {
+                Keys: [
+                  AttributeValue.wrap(userKey),
                 ]
               },
             }, 
@@ -88,6 +96,7 @@ export default async function handleRequest(req: Request): Promise<Response> {
           if (requests.Responses[process.env['Like'] || ""].length > 0) {
             liked = true;
           }
+          const userDB: User = requests.Responses[process.env['User'] || ""].length > 0 ? AttributeValue.unwrap(requests.Responses[process.env['User'] || ""][0]) : {}
     
           return {
             id: workout.workoutID,
@@ -103,6 +112,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
             workout: workout.workout,
             visible: workout.visible ?? undefined,
             deleted: workout.deleted ?? undefined,
+            profile_small: userDB?.profile_small ?? "",
+            profile_medium: userDB?.profile_medium ?? "",
+            profile_large: userDB?.profile_large ?? "",
           };
         }
       )
