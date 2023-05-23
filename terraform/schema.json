@@ -143,6 +143,29 @@
         "originalType": "ID"
       }
     },
+    "Comment": {
+      "hash_key": {
+        "name": "id",
+        "type": "S",
+        "originalType": "ID"
+      },
+      "gsi": [
+        {
+          "name": "CommentByWorkoutIDCreatedAt",
+          "hash_key": {
+            "name": "workoutID",
+            "type": "S",
+            "originalType": "ID"
+          },
+          "range_key": {
+            "name": "createdAt",
+            "type": "S",
+            "originalType": "ID"
+          }
+        }
+      ],
+      "range_key": null
+    },
     "Exercise": {
       "hash_key": {
         "name": "exerciseID",

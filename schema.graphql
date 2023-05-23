@@ -40,6 +40,7 @@ type Workout
 
   visible: Boolean!
   likes: Int!
+  comments: Int!
   caption: String!
   postLocation: String!
   deleted: Boolean!
@@ -49,6 +50,14 @@ type Like @key(pk: "workoutID", sk: "userID") {
   userID: ID!
   workoutID: ID!
   createdAt: String!
+}
+
+type Comment @key(pk: "id") @gsi(pk: "workoutID", sk: "createdAt") {
+  id: ID!
+  userID: ID!
+  workoutID: ID!
+  createdAt: String!
+  text: String!
 }
 
 type Exercise

@@ -12,6 +12,26 @@ export type Scalars = {
   Float: number;
 };
 
+export type Comment = {
+  __typename?: 'Comment';
+  createdAt: Scalars['String'];
+  id: Scalars['ID'];
+  text: Scalars['String'];
+  userID: Scalars['ID'];
+  workoutID: Scalars['ID'];
+};
+
+export type CommentByWorkoutIdCreatedAtKey = {
+  __typename?: 'CommentByWorkoutIDCreatedAtKey';
+  createdAt: Scalars['ID'];
+  workoutID: Scalars['ID'];
+};
+
+export type CommentKey = {
+  __typename?: 'CommentKey';
+  id: Scalars['ID'];
+};
+
 export type Exercise = {
   __typename?: 'Exercise';
   deleted: Scalars['Boolean'];
@@ -149,6 +169,7 @@ export type UserKey = {
 export type Workout = {
   __typename?: 'Workout';
   caption: Scalars['String'];
+  comments: Scalars['Int'];
   deleted: Scalars['Boolean'];
   lastUpdated: Scalars['Int'];
   likes: Scalars['Int'];
