@@ -1,11 +1,13 @@
 import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { z } from "zod";
-import { BodyError } from "../../utils/errors";
+import { BodyError, ParameterError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
 
-import { Following, FriendRequestKey, UserKey } from '../../graphql'
+import { Following, FriendRequestKey, User, UserKey } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
+import { cognitoRequest } from "../../utils/cognitoRequest";
+import { deliverNotification } from "../../utils/deliverNotification";
 
 const API_KEY = process.env.API_KEY;
 
@@ -104,6 +106,32 @@ export default async function handleRequest(req: Request): Promise<Response> {
         throw new BodyError("Follow Request Does Not Exist");
       throw error;
     })
+
+    //Get username and deviceId
+    const userKey: UserKey = {
+      userID: username
+    }
+    const getUser = {
+      TableName: process.env['User'],
+      Key: AttributeValue.wrap(userKey)
+    };
+    const [_user, userCognito] = await Promise.all([
+      dynamoDBRequest("GetItem", getUser),
+      cognitoRequest(	
+        "AdminGetUser", {
+          Username: body.requesterID,
+          UserPoolId: process.env.userPoolID,
+        }).catch((error) => {
+          if (error.message === "User does not exist.")
+            throw new ParameterError("User Not Found");
+        })
+    ])
+    const preferred_username = userCognito.UserAttributes?.find(
+      (obj) => obj.Name === "preferred_username"
+    )?.Value;
+    const user: User = AttributeValue.unwrap(_user.Item)
+    if (user?.endpointArn)
+      deliverNotification(user?.endpointArn, `@${preferred_username} accepted your follow request.`)
 
     // Logic can be handled after response
     fetch(`${url}/api/friend/addFriendPosts`, {

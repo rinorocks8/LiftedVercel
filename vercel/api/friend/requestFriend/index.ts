@@ -3,9 +3,11 @@ import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { z } from "zod";
 import * as responder from '../../utils/responder';
 
-import { FriendRequest } from '../../graphql'
+import { FriendRequest, User, UserKey } from '../../graphql'
 import { AttributeValue } from 'dynamodb-data-types';
-import { BodyError } from "../../utils/errors";
+import { BodyError, ParameterError } from "../../utils/errors";
+import { cognitoRequest } from "../../utils/cognitoRequest";
+import { deliverNotification } from "../../utils/deliverNotification";
 
 export const config = {
   runtime: "experimental-edge",
@@ -42,6 +44,32 @@ export default async function handleRequest(req: Request): Promise<Response> {
     };
 
     await dynamoDBRequest(operation, operation_body);
+
+    //Get username and deviceId
+    const userKey: UserKey = {
+      userID: body.requestingID
+    }
+    const getUser = {
+      TableName: process.env['User'],
+      Key: AttributeValue.wrap(userKey)
+    };
+    const [_user, userCognito] = await Promise.all([
+      dynamoDBRequest("GetItem", getUser),
+      cognitoRequest(	
+        "AdminGetUser", {
+          Username: username,
+          UserPoolId: process.env.userPoolID,
+        }).catch((error) => {
+          if (error.message === "User does not exist.")
+            throw new ParameterError("User Not Found");
+        })
+    ])
+    const preferred_username = userCognito.UserAttributes?.find(
+      (obj) => obj.Name === "preferred_username"
+    )?.Value;
+    const user: User = AttributeValue.unwrap(_user.Item)
+    if (user?.endpointArn)
+      deliverNotification(user?.endpointArn, `@${preferred_username} requested to follow you.`)
     
     return responder.success({
       result: "Friend Requested",

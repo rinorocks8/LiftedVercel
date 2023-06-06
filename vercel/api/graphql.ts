@@ -143,6 +143,8 @@ export type LikeKey = {
 export type User = {
   __typename?: 'User';
   bio: Scalars['String'];
+  deviceToken: Scalars['String'];
+  endpointArn: Scalars['String'];
   lastUpdated: Scalars['Int'];
   maxTimer: Scalars['Int'];
   name: Scalars['String'];

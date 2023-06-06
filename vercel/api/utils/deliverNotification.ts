@@ -1,5 +1,3 @@
-// utils/queryCognitoUser.ts
-
 const encoder = new TextEncoder();
 
 function bufferToHex(buffer: ArrayBuffer): string {
@@ -16,27 +14,31 @@ async function hmac(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
   return crypto.subtle.sign({ name: 'HMAC', hash: 'SHA-256' }, await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']), encoder.encode(message));
 }
 
-export async function cognitoRequest(operation: string, body: object): Promise<any> {
+export async function deliverNotification(arn: string, message: string): Promise<any> {
   const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID as string;
   const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY as string;
   const AWS_REGION = process.env.AWS_REGION as string;
-  const AWS_SERVICE_NAME = "cognito-idp";
+  const AWS_SERVICE_NAME = "sns";
   const AWS_API_ENDPOINT = `${AWS_SERVICE_NAME}.${AWS_REGION}.amazonaws.com`;
   const AWS_HTTP_METHOD = "POST";
   const AWS_API_PATH = "/";
   const AWS_API_QUERY_PARAMS = {};
-  const TARGET = "com.amazonaws.cognito.identity.idp.model.AWSCognitoIdentityProviderService"
+
+  const AWS_API_BODY = new URLSearchParams({
+    Action: "Publish",
+    Message: message,
+    TargetArn: arn,
+    Version: "2010-03-31"
+  });
 
   const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, "");
   const date = timestamp.substr(0, 8);
 
-  const AWS_API_BODY = JSON.stringify(body);
-
   const canonicalQueryString = Object.keys(AWS_API_QUERY_PARAMS).sort().map(key => `${key}=${encodeURIComponent(AWS_API_QUERY_PARAMS[key])}`).join("&");
-  const canonicalHeaders = `content-type:application/x-amz-json-1.0\nhost:${AWS_API_ENDPOINT}\nx-amz-date:${timestamp}\nx-amz-target:${TARGET}.${operation}\n`;
-  const signedHeaders = "content-type;host;x-amz-date;x-amz-target";
+  const canonicalHeaders = `content-type:application/x-www-form-urlencoded\nhost:${AWS_API_ENDPOINT}\nx-amz-date:${timestamp}\n`;
+  const signedHeaders = "content-type;host;x-amz-date";
 
-  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(AWS_API_BODY));
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(AWS_API_BODY.toString()));
   const canonicalRequest = `${AWS_HTTP_METHOD}\n${AWS_API_PATH}\n${canonicalQueryString}\n${canonicalHeaders}\n${signedHeaders}\n${bufferToHex(digest)}`;
 
   const canonicalRequestHash = await crypto.subtle.digest('SHA-256', encoder.encode(canonicalRequest));
@@ -52,26 +54,17 @@ export async function cognitoRequest(operation: string, body: object): Promise<a
 
   const authorizationHeader = `AWS4-HMAC-SHA256 Credential=${AWS_ACCESS_KEY_ID}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${bufferToHex(signature)}`;
   const headers = {
-    "Content-Type": "application/x-amz-json-1.0",
+    "Content-Type": "application/x-www-form-urlencoded",
     "X-Amz-Date": timestamp,
-    "X-Amz-Target": `${TARGET}.${operation}`,
     "Authorization": authorizationHeader,
   };
   const options: RequestInit = {
     method: AWS_HTTP_METHOD,
     headers: headers,
-    body: AWS_API_BODY
+    body: AWS_API_BODY.toString()
   };
   try {
-    const response = await fetch(`https://${AWS_API_ENDPOINT}${AWS_API_PATH}`, options);
-    const data = await response.json();
-    if (!response.ok) {
-      if (data.__type === 'com.amazonaws.cognito.identity.idp.model#UserNotFoundException')
-        return {}
-      console.log(data)
-      throw new Error(`Error ${response.status}: ${data.Message ?? data.message}`);
-    }
-    return data;
+    await fetch(`https://${AWS_API_ENDPOINT}${AWS_API_PATH}`, options);
   } catch (error) {
     console.error(error);
     throw error;

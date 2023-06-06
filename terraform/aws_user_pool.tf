@@ -47,8 +47,8 @@ resource "aws_cognito_user_pool_client" "lifted" {
     "Google",
   ]
 
-  callback_urls = ["liftedgym://", "exp://192.168.68.74:19000"]
-  logout_urls   = ["liftedgym://", "exp://192.168.68.74:19000"]
+  callback_urls = ["liftedgym://", "exp://192.168.68.67:19000"]
+  logout_urls   = ["liftedgym://", "exp://192.168.68.67:19000"]
 
   token_validity_units {
     refresh_token = "days"

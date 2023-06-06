@@ -97,4 +97,7 @@ type User @key(pk: "userID") {
   profile_small: String!
   profile_medium: String!
   profile_large: String!
+
+  deviceToken: String!
+  endpointArn: String!
 }

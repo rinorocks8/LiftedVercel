@@ -2,7 +2,8 @@ import { dynamoDBRequest } from "../../utils/dynamoDBRequest";
 import { verifyCognitoToken } from "../../utils/verifyCognitoToken";
 import { BodyError, AuthenticationError } from "../../utils/errors";
 import * as responder from '../../utils/responder';
-import { FollowingKey, WorkoutKey } from '../../graphql';
+import { FollowingKey, UserKey, Comment, WorkoutKey } from '../../graphql';
+import { cognitoRequest } from "../../utils/cognitoRequest";
 
 import { z } from "zod";
 import { AttributeValue } from 'dynamodb-data-types';
@@ -22,13 +23,13 @@ export default async function handleRequest(req: Request): Promise<Response> {
     const username = decoded["username"];
     const body = requestBodySchema.parse(await req.json());
 
-    const workout: WorkoutKey = {
+    const workoutKey: WorkoutKey = {
       workoutID: body.workoutID,
     }
 
     const workoutGetParams = {
       TableName: process.env['Workout'],
-      Key: AttributeValue.wrap(workout)
+      Key: AttributeValue.wrap(workoutKey)
     };
 
     const workoutRes = await dynamoDBRequest("GetItem", workoutGetParams);
@@ -63,7 +64,37 @@ export default async function handleRequest(req: Request): Promise<Response> {
     
     let results = await dynamoDBRequest("Query", getCommentsParams);
 
-    const comments = results.Items.map((item) => AttributeValue.unwrap(item));
+    const comments = await Promise.all(results.Items.map(async (item) => {
+      const comment: Comment = AttributeValue.unwrap(item);
+
+      const userKey: UserKey = {
+        userID: comment.userID,
+      }
+
+      const [userDBData, cognitoUserData] = await Promise.all([
+        dynamoDBRequest("GetItem", {
+          TableName: process.env['User'],
+          Key: AttributeValue.wrap(userKey)
+        }),
+        cognitoRequest("AdminGetUser", {
+          Username: comment.userID,
+          UserPoolId: process.env.userPoolID
+        }),
+      ]);
+
+      const userDB = userDBData.Item ? AttributeValue.unwrap(userDBData.Item) : {};
+      const username = cognitoUserData?.UserAttributes?.find(
+        (obj) => obj.Name === "preferred_username"
+      )?.Value;
+
+      return {
+        ...comment,
+        username: username,
+        profile_small: userDB?.profile_small ?? "",
+        profile_medium: userDB?.profile_medium ?? "",
+        profile_large: userDB?.profile_large ?? "",
+      };
+    }));
 
     return responder.success({
       comments: comments,
