@@ -136,14 +136,9 @@ export default async function handleRequest(req: Request): Promise<Response> {
         Update: {
           TableName: process.env['User'],
           Key: AttributeValue.wrap(userKey),  // you need to provide the userKey here
-          UpdateExpression: "SET #name = :new_name, lastUpdated = :lastUpdated, total_days = :total_days, longestStreak = :longestStreak, currentStreak = :currentStreak, workoutPercentage = :workoutPercentage, welcome = :new_welcome, maxTimer = :new_maxTimer, timerAutoStart = :new_timerAutoStart, timerNotifications = :new_timerNotifications, programs = :new_programs, total_exercises = :new_total_exercises, total_workouts = :new_total_workouts, total_weight = :new_total_weight, total_sets = :new_total_sets, total_duration = :new_total_duration, bio = :bio",
-          ExpressionAttributeNames: {
-              "#name": "name"
-          },
+          UpdateExpression: "SET lastUpdated = :lastUpdated, total_days = :total_days, longestStreak = :longestStreak, currentStreak = :currentStreak, workoutPercentage = :workoutPercentage, welcome = :new_welcome, maxTimer = :new_maxTimer, timerAutoStart = :new_timerAutoStart, timerNotifications = :new_timerNotifications, programs = :new_programs, total_exercises = :new_total_exercises, total_workouts = :new_total_workouts, total_weight = :new_total_weight, total_sets = :new_total_sets, total_duration = :new_total_duration",
           ExpressionAttributeValues: AttributeValue.wrap({
-            ":new_name": body.user.name ?? "",
             ":lastUpdated": body.user.lastUpdated ?? 0,
-            ":bio": body.user.bio ?? "",
             ":new_welcome": body.user.welcome,
             ":new_maxTimer": body.user.maxTimer,
             ":new_timerAutoStart": body.user.timerAutoStart,

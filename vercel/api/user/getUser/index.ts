@@ -85,8 +85,12 @@ export default async function handleRequest(req: Request): Promise<Response> {
         friendship: friendship,
         followers: userDB.followers ?? 0,
         following: userDB.following ?? 0,
-        name: userDB.name ?? "",
-        bio: userDB.bio ?? "",
+        name: user.UserAttributes?.find(
+          (obj) => obj.Name === "name"
+        )?.Value ?? "",
+        bio: user.UserAttributes?.find(
+          (obj) => obj.Name === "custom:bio"
+        )?.Value ?? "",
         total_exercises: userDB.total_exercises ?? 0,
         total_workouts: userDB.total_workouts ?? 0,
         total_weight: userDB.total_weight ?? 0,
